@@ -401,7 +401,7 @@
         "query_tables": ["uvm_findings"],
         "query_uses_library": false
       },
-      "creator_mail": "ermoore@paloaltonetworks.com"
+      "creator_mail": ""
     },
     {
       "widget_key": "xql_1751480113824",
@@ -425,7 +425,7 @@
         "query_tables": ["asset_inventory"],
         "query_uses_library": false
       },
-      "creator_mail": "ermoore@paloaltonetworks.com"
+      "creator_mail": ""
     },
     {
       "widget_key": "xql_1751826024368",
@@ -476,7 +476,7 @@
         "query_tables": ["asset_inventory"],
         "query_uses_library": false
       },
-      "creator_mail": "ermoore@paloaltonetworks.com"
+      "creator_mail": ""
     },
     {
       "widget_key": "xql_1751907240613",
@@ -505,7 +505,7 @@
         "query_tables": ["uvm_findings", "findings", "asset_inventory"],
         "query_uses_library": false
       },
-      "creator_mail": "ermoore@paloaltonetworks.com"
+      "creator_mail": ""
     },
     {
       "widget_key": "xql_1751912615687",
@@ -538,7 +538,7 @@
         "query_tables": ["uvm_findings"],
         "query_uses_library": false
       },
-      "creator_mail": "ermoore@paloaltonetworks.com"
+      "creator_mail": ""
     },
     {
       "widget_key": "xql_1751913463660",
@@ -571,7 +571,7 @@
         "query_tables": ["asset_inventory"],
         "query_uses_library": false
       },
-      "creator_mail": "ermoore@paloaltonetworks.com"
+      "creator_mail": ""
     },
     {
       "widget_key": "xql_1751985218761",
