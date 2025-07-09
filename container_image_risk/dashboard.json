@@ -1,0 +1,630 @@
+{
+  "dashboards_data": [
+    {
+      "name": "Container Images and Daily Risk",
+      "description": "Container images detected over time, daily risk, and high-impact low-effort patch recommendations.",
+      "status": "ENABLED",
+      "layout": [
+        {
+          "id": "row-7211",
+          "data": [
+            {
+              "key": "xql_1751826024368",
+              "data": {
+                "type": "Custom XQL",
+                "width": 50,
+                "height": 454,
+                "params": [
+                  { "name": "first_detected", "value": "*" },
+                  { "name": "sdlc_stage", "value": "*" }
+                ],
+                "phrase": "dataset = asset_inventory // Search in asset inventory database\n| filter xdm.asset.type.category = \"Container Image\" // Filter to Container Images\n| fields xdm.asset.provider as Cloud, xdm.asset.name as Name, xdm.asset.first_observed as first_observed, xdm.asset.id as asset_id, xdm.asset.normalized_fields // Only return these fields\n| alter sdlc = xdm.asset.normalized_fields -> [\"xdm.development_cycle_stages\"][0] // Extract SDLC stage from JSON\n| filter sdlc != null // Ignore any results that have no SDLC stage\n| bin first_observed span = 1D // Group time based results to the same day\n| alter first_seen = arrayindex(split(to_string(first_observed), \" \"), 0) // Reduce the date display to just YYYY-MM-DD\n| filter first_seen = $first_detected // Dashboard drilldown filter to selected day\n| filter sdlc = $sdlc_stage // Dashboard drilldown filter to SDLC stage\n| comp count() as New_Container_Image by first_seen, sdlc  | sort desc first_seen // Total images by date first seen and SDLC stage, sort by most recent day first\n| limit 25 // Limit results to 25 items (not days)\n\n\n| view graph type = column subtype = grouped xaxis = first_seen yaxis = New_Container_Image series = sdlc default_limit = `false` seriescolor(\"DEPLOY\",\"#cf2fec\") seriescolor(\"RUNTIME\",\"#31ee0a\") seriescolor(\"BUILD\",\"#60a4e6\") ",
+                "time_frame": { "relativeTime": 86400000 },
+                "viewOptions": {
+                  "type": "column",
+                  "commands": [
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "subtype",
+                        "value": "grouped"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "xaxis",
+                        "value": "first_seen"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "yaxis",
+                        "value": "New_Container_Image"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "series",
+                        "value": "sdlc"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "default_limit",
+                        "value": "false"
+                      }
+                    },
+                    {
+                      "func": {
+                        "args": ["DEPLOY", "#cf2fec"],
+                        "name": "seriescolor"
+                      }
+                    },
+                    {
+                      "func": {
+                        "args": ["RUNTIME", "#31ee0a"],
+                        "name": "seriescolor"
+                      }
+                    },
+                    {
+                      "func": {
+                        "args": ["BUILD", "#60a4e6"],
+                        "name": "seriescolor"
+                      }
+                    }
+                  ]
+                },
+                "drilldown_config": {
+                  "actionData": [
+                    { "param": "sdlc_stage", "value": "$y_axis.name" }
+                  ],
+                  "actionType": "in_dashboard_drilldown"
+                }
+              }
+            },
+            {
+              "key": "xql_1751907240613",
+              "data": {
+                "type": "Custom XQL",
+                "width": 50,
+                "height": 454,
+                "params": [
+                  { "name": "first_detected", "value": "*" },
+                  { "name": "sdlc_stage", "value": "*" }
+                ],
+                "phrase": "dataset = asset_inventory // Search in asset inventory database\n| filter xdm.asset.type.category = \"Container Image\" // Filter to Container Images\n| fields xdm.asset.provider as Cloud, xdm.asset.name as Name, xdm.asset.first_observed as first_observed, xdm.asset.id as asset_id, xdm.asset.normalized_fields // Only return these fields\n| alter sdlc = xdm.asset.normalized_fields -> [\"xdm.development_cycle_stages\"][0] // Extract SDLC stage from JSON\n| filter sdlc != null // Ignore any results that have no SDLC stage\n| bin first_observed span = 1D // Group time based results to the same day\n| alter first_seen = arrayindex(split(to_string(first_observed), \" \"), 0) // Reduce the date display to just YYYY-MM-DD\n| filter first_seen = $first_detected // Dashboard drilldown filter to selected day\n| filter sdlc = $sdlc_stage // Dashboard drilldown filter to SDLC stage\n| fields Name, first_seen, sdlc, asset_id // Only return these fields\n| sort desc first_seen // Sort by most recent day first\n// \n| join ( dataset = uvm_findings // Join results with vulnerability database\n| filter asset_category = \"Container Image\" // Filter to Container Images\n| fields asset_name , cvss_severity , asset_id, has_kev , cve_risk_factors , fix_available // Only return these fields\n| alter severity = arrayindex(split(cvss_severity, \"_\"), 2) // Normalize cvss_severity field to only return \"Critical/High/Medium/Low\"\n| comp\n    count(if(severity = \"Critical\", 1, null)) as Criticals,\n    count(if(severity = \"High\", 1, null)) as Highs,\n    count(if(severity = \"Medium\", 1, null)) as Mediums,\n    count(if(severity = \"Low\", 1, null)) as Lows\nby asset_id // Count vulnerabilties by severity and create 4 new rows\n| alter temporal_score = add( add(multiply(25, Criticals), multiply(10, Highs)), add(multiply(5, Mediums),  multiply(1, Lows) ) ) // Calculate temporal score \n// Temporal score calculation = (Criticals * 25) + (Highs * 10) + (Medium * 5) + (Lows * 1)\n//\n| alter risk_score = round(multiply(100, divide(temporal_score, add(temporal_score, 100)))) // Calculate risk score\n// Risk score calculation = 100 * (temporal score / (temporal score + 100))\n//\n| fields  risk_score ,asset_id // Only return these fields\n) as risk risk.asset_id = asset_id // Match asset id from both databases to combine data",
+                "entityType": "xql-widget-table-26017745-0af0-4918-82c2-535acf8e68d9",
+                "time_frame": { "relativeTime": 86400000 },
+                "viewOptions": { "type": "table", "commands": [] },
+                "drilldown_config": {
+                  "actionData": {
+                    "url": "https://placeholder.com/assets/inventory/compute/container-image?id=$row.asset_id&assetId=$row.asset_id",
+                    "openInNewTab": true
+                  },
+                  "actionType": "open_custom_url"
+                },
+                "gridRawStorageInfo": {
+                  "sort": null,
+                  "coldefs": {
+                    "Name": "{\"pinned\":null,\"width\":456,\"hide\":false}",
+                    "sdlc": "{\"pinned\":null,\"width\":136,\"hide\":false}",
+                    "asset_id": "{\"pinned\":null,\"width\":null,\"hide\":true}",
+                    "first_seen": "{\"pinned\":null,\"width\":164,\"hide\":false}"
+                  },
+                  "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                  "columnWidth": "\"regular\""
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "row-6700",
+          "data": [
+            {
+              "key": "xql_1751985218761",
+              "data": {
+                "type": "Custom XQL",
+                "width": 100,
+                "height": 398,
+                "params": [
+                  { "name": "first_detected", "value": "*" },
+                  { "name": "sdlc_stage", "value": "*" }
+                ],
+                "phrase": "dataset = asset_inventory // Search in asset inventory database\n| filter xdm.asset.type.category = \"Container Image\" // Filter to Container Images\n| fields xdm.asset.provider as Cloud, xdm.asset.name as Name, xdm.asset.first_observed as first_observed, xdm.asset.id as asset_id, xdm.asset.normalized_fields // Only return these fields\n| alter sdlc = xdm.asset.normalized_fields -> [\"xdm.development_cycle_stages\"][0] // Extract SDLC stage from JSON\n| filter sdlc != null // Ignore any results that have no SDLC stage\n| bin first_observed span = 1D // Group time based results to the same day\n| alter first_seen = arrayindex(split(to_string(first_observed), \" \"), 0) // Reduce the date display to just YYYY-MM-DD\n| filter first_seen = $first_detected // Dashboard drilldown filter to selected day\n| filter sdlc = $sdlc_stage // Dashboard drilldown filter to SDLC stage\n| fields Name, first_seen, sdlc, asset_id // Only return these fields\n| limit 200 // Limit results to 200\n| sort desc first_seen // Sort by most recent day first\n//\n| join ( dataset = uvm_findings // Join results with vulnerability database\n| filter asset_category = \"Container Image\" // Filter to Container Images\n| fields asset_name , cvss_severity , asset_id, has_kev , cve_risk_factors , fix_available // Only return these fields\n| alter severity = arrayindex(split(cvss_severity, \"_\"), 2) // Normalize cvss_severity field to only return \"Critical/High/Medium/Low\"\n| comp\n    count(if(severity = \"Critical\", 1, null)) as Criticals,\n    count(if(severity = \"High\", 1, null)) as Highs,\n    count(if(severity = \"Medium\", 1, null)) as Mediums,\n    count(if(severity = \"Low\", 1, null)) as Lows\nby asset_id // Count vulnerabilties by severity and create 4 new rows\n| alter temporal_score = add( add(multiply(25, Criticals), multiply(10, Highs)), add(multiply(5, Mediums),  multiply(1, Lows) ) ) // Calculate temporal score \n// Temporal score calculation = (Criticals * 25) + (Highs * 10) + (Medium * 5) + (Lows * 1)\n//\n| alter risk_score = round(multiply(100, divide(temporal_score, add(temporal_score, 100)))) // Calculate risk score\n// Risk score calculation = 100 * (temporal score / (temporal score + 100))\n//\n| fields  risk_score ,asset_id // Only return these fields\n) as risk risk.asset_id = asset_id // Match asset id from both databases to combine data\n| comp avg(risk_score) as average_risk by first_seen // Average risk score by each image based on day\n| alter Daily_Image_Risk_Score = round(average_risk) // Round result to remove any decimal points\n| fields first_seen ,Daily_Image_Risk_Score // Only return these fields\n\n\n\n| view graph type = column subtype = grouped show_callouts = `true` xaxis = first_seen yaxis = Daily_Image_Risk_Score default_limit = `false` seriescolor(\"Daily_Image_Risk_Score\",\"#ad0e23\") legend = `false` ",
+                "time_frame": { "relativeTime": 86400000 },
+                "viewOptions": {
+                  "type": "column",
+                  "commands": [
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "subtype",
+                        "value": "grouped"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "show_callouts",
+                        "value": "true"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "xaxis",
+                        "value": "first_seen"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "yaxis",
+                        "value": "Daily_Image_Risk_Score"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "default_limit",
+                        "value": "false"
+                      }
+                    },
+                    {
+                      "func": {
+                        "args": ["Daily_Image_Risk_Score", "#ad0e23"],
+                        "name": "seriescolor"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "legend",
+                        "value": "false"
+                      }
+                    }
+                  ]
+                },
+                "drilldown_config": {
+                  "actionData": [
+                    { "param": "first_detected", "value": "$x_axis.value" }
+                  ],
+                  "actionType": "in_dashboard_drilldown"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "row-4526",
+          "data": [
+            {
+              "key": "text",
+              "data": {
+                "text": "# Low Effort High Impact Fixes\n### The table below contains container images with Critical and High vulnerabilities that have \"bug fixes\". These packages follow semantic versioning (major.minor.patch) and are meant to be backwards compatible with existing code.",
+                "type": "Text",
+                "width": 25,
+                "height": 264,
+                "markdownEnabled": true
+              }
+            },
+            {
+              "key": "xql_1751912615687",
+              "data": {
+                "type": "Custom XQL",
+                "width": 25,
+                "height": 264,
+                "phrase": "dataset = uvm_findings \n| filter asset_category = \"Container Image\"\n| filter fix_available = true\n| fields asset_name, vulnerability_id as cve_id, cvss_severity, cvss_score, file_path,  package_type, package_version as current_version, fix_versions, asset_id, has_issue \n| filter cvss_score > 0\n| filter fix_versions != null\n| filter has_issue = true\n| alter path = if(file_path = null or file_path = \"\", \"Update OS to Patch\", file_path)\n| alter semver = split(current_version,\".\")\n| filter array_length(semver) != 2 // only include packages that use semantic versioning\n| alter major = to_string(arrayindex(semver , 0)),\n        minor = to_string(arrayindex(semver, 1)),\n        patch = to_string(arrayindex(semver , 2))\n| alter fixed_version = arrayfilter(fix_versions, \"@element\" contains concat(major, \".\", minor, \".\") ) // filter for packages matching major.minor.\n| alter Severity = arrayindex(split(cvss_severity, \"_\"), 2) // Normalize severity field\n| filter fixed_version != null\n| comp count() as Total by cve_id \n| comp sum(Total) as Fixable\n\n\n| view graph type = single subtype = standard yaxis = Fixable scale_threshold(\"#56c5ff\") headcolor = \"#cbe65e\" ",
+                "time_frame": { "relativeTime": 86400000 },
+                "viewOptions": {
+                  "type": "single",
+                  "commands": [
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "subtype",
+                        "value": "standard"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "yaxis",
+                        "value": "Fixable"
+                      }
+                    },
+                    {
+                      "func": { "args": ["#56c5ff"], "name": "scale_threshold" }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "headcolor",
+                        "value": "\"#cbe65e\""
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "key": "text",
+              "data": {
+                "text": "# Most Common Container Images on Hosts\n### The table below contains container images and the number of hosts where that container image has been detected.",
+                "type": "Text",
+                "width": 25,
+                "height": 264,
+                "markdownEnabled": true
+              }
+            },
+            {
+              "key": "xql_1751913463660",
+              "data": {
+                "type": "Custom XQL",
+                "width": 25,
+                "height": 264,
+                "params": [],
+                "phrase": "dataset = asset_inventory \n| filter xdm.asset.type.category = \"Container Image\"\n| fields xdm.asset.name as Name\n| comp count_distinct(Name) as Total\n\n| view graph type = single subtype = standard yaxis = Total scale_threshold(\"#56c5ff\") ",
+                "time_frame": { "relativeTime": 86400000 },
+                "viewOptions": {
+                  "type": "single",
+                  "commands": [
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "subtype",
+                        "value": "standard"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "yaxis",
+                        "value": "Total"
+                      }
+                    },
+                    {
+                      "func": { "args": ["#56c5ff"], "name": "scale_threshold" }
+                    }
+                  ]
+                },
+                "drilldown_config": {
+                  "actionData": {
+                    "url": "https://placeholder.com/assets/inventory/compute/container-image",
+                    "openInNewTab": true
+                  },
+                  "actionType": "open_custom_url"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "row-3911",
+          "data": [
+            {
+              "key": "xql_1747756743169",
+              "data": {
+                "type": "Custom XQL",
+                "width": 50,
+                "height": 460,
+                "phrase": "dataset = uvm_findings // Search in vulnerability database\n| filter asset_category = \"Container Image\" // Filter to Container Images\n| filter fix_available = true // Only incude vulnerabilities that have a fix\n| fields asset_name, vulnerability_id as cve, cvss_severity, cvss_score, file_path,  package_type, package_version as current_version, fix_versions, asset_id, has_issue // Only return certain fields\n| filter cvss_score > 0 // Filter out any CVSS with invalid scores \n| filter fix_versions != null // Filter out results that have no fix versions\n| filter has_issue = true // Only include results that have an issue\n//| filter Path != null and Path != \"\" \n| alter path = if(file_path = null or file_path = \"\", \"Update OS to Patch\", file_path)\n| alter semver = split(current_version,\".\")\n| filter array_length(semver) != 2 // only include packages that use semantic versioning\n| alter major = to_string(arrayindex(semver , 0)),\n        minor = to_string(arrayindex(semver, 1)),\n        patch = to_string(arrayindex(semver , 2))\n| alter fixed_version = arrayfilter(fix_versions, \"@element\" contains concat(major, \".\", minor, \".\") ) // filter for packages matching major.minor.\n| alter Severity = arrayindex(split(cvss_severity, \"_\"), 2) // Normalize severity field\n| filter fixed_version != null\n// Exclude images from results by filtering out specific image names\n//| filter asset_name not contains \"cortex-agent\"\n//\n| fields asset_name, cve, Severity, cvss_score as Score, current_version as Current, fixed_version as Fixed, path, package_type, asset_id \n| sort desc Score  ",
+                "entityType": "xql-widget-table-aab9bcf8-fe4d-4bbc-a9fe-8fcbf70aa928",
+                "time_frame": { "relativeTime": 86400000 },
+                "viewOptions": { "type": "table", "commands": [] },
+                "drilldown_config": {
+                  "actionData": {
+                    "url": "https://placeholder.com/exposure-management/vulnerability-issues?cveId=$row.cve&assetId=$row.asset_id",
+                    "openInNewTab": true
+                  },
+                  "actionType": "open_custom_url"
+                },
+                "gridRawStorageInfo": {
+                  "sort": null,
+                  "coldefs": {
+                    "cve": "{\"pinned\":null,\"width\":173,\"hide\":false}",
+                    "Fixed": "{\"pinned\":null,\"width\":178,\"hide\":false}",
+                    "Score": "{\"pinned\":null,\"width\":121,\"hide\":false}",
+                    "Current": "{\"pinned\":null,\"width\":140,\"hide\":false}",
+                    "Severity": "{\"pinned\":null,\"width\":142,\"hide\":false}",
+                    "asset_id": "{\"pinned\":null,\"width\":200,\"hide\":true}",
+                    "asset_name": "{\"pinned\":null,\"width\":174,\"hide\":false}"
+                  },
+                  "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                  "columnWidth": null
+                }
+              }
+            },
+            {
+              "key": "xql_1751480113824",
+              "data": {
+                "type": "Custom XQL",
+                "width": 50,
+                "height": 460,
+                "params": [],
+                "phrase": "dataset = asset_inventory \n| filter xdm.asset.type.category = \"VM Instance\"\n| fields xdm.asset.normalized_fields, xdm.asset.name as Name, xdm.asset.id as asset_id\n| alter image_list = xdm.asset.normalized_fields -> [\"xdm.asset.relations\"][]\n| alter image_ids = arraymap(image_list, \"@element\"->[\"xdm.asset.relation.asset_id\"])\n| alter images = array_length(image_ids)\n| arrayexpand image_ids \n| comp count() as host_count by image_ids\n| join (dataset = asset_inventory | filter xdm.asset.type.category = \"Container Image\" | fields xdm.asset.id, xdm.asset.name  ) as asset_lookup asset_lookup.xdm.asset.id = image_ids \n| fields host_count , xdm.asset.name as image_name, xdm.asset.id as asset_id\n| sort desc host_count\n| limit 10",
+                "entityType": "xql-widget-table-5338c066-2ad9-431c-9a05-632b9648bb93",
+                "time_frame": { "relativeTime": 86400000 },
+                "viewOptions": { "type": "table", "commands": [] },
+                "drilldown_config": {
+                  "actionData": {
+                    "url": "https://placeholder.com/assets/inventory?id=$row.asset_id&assetId=$row.asset_id",
+                    "openInNewTab": true
+                  },
+                  "actionType": "open_custom_url"
+                },
+                "gridRawStorageInfo": {
+                  "sort": null,
+                  "coldefs": {
+                    "asset_id": "{\"pinned\":null,\"width\":634,\"hide\":true}",
+                    "host_count": "{\"pinned\":null,\"width\":179,\"hide\":false}"
+                  },
+                  "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                  "columnWidth": "\"stretch\""
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "default_dashboard_id": 1,
+      "global_id": "7fb0f8fb9d814d528e87230c326140db",
+      "metadata": { "params": [] }
+    }
+  ],
+  "widgets_data": [
+    {
+      "widget_key": "xql_1747756743169",
+      "title": "Container Image Vulns with Patch Fixes",
+      "creation_time": 1747756743169,
+      "description": "List identified container image vulnerabilities that have packages using semantic versioning that have \"patch\" fixes available",
+      "data": {
+        "phrase": "dataset = uvm_findings // Search in vulnerability database\n| filter asset_category = \"Container Image\" // Filter to Container Images\n| filter fix_available = true // Only incude vulnerabilities that have a fix\n| fields asset_name, vulnerability_id as cve, cvss_severity, cvss_score, file_path,  package_type, package_version as current_version, fix_versions, asset_id, has_issue // Only return these fields\n| filter cvss_score > 0 // Filter out any CVSS with invalid scores \n| filter fix_versions != null // Filter out results that have no fix versions\n| filter has_issue = true // Only include results that have an issue\n| alter path = if(file_path = null or file_path = \"\", \"Update OS to Patch\", file_path) // If fixed path is null it is an OS patch, adjust text to match\n| alter semver = split(current_version,\".\") // Split package version at . in name\n| filter array_length(semver) != 2 // Filter to only include packages that use semantic versioning x.x.x\n| alter major = to_string(arrayindex(semver , 0)),\n        minor = to_string(arrayindex(semver, 1)),\n        patch = to_string(arrayindex(semver , 2))\n| alter fixed_version = arrayfilter(fix_versions, \"@element\" contains concat(major, \".\", minor, \".\") ) // filter for packages matching major.minor.\n| alter Severity = arrayindex(split(cvss_severity, \"_\"), 2) // Normalize severity field\n| filter fixed_version != null // Filter out identified fixes that have no fix version supplied\n//\n// Optional: Exclude images from results by filtering out specific image names\n//| filter asset_name not contains \"cortex-agent\"\n//\n| fields asset_name, cve, Severity, cvss_score as Score, current_version as Current, fixed_version as Fixed, path, package_type, asset_id // Only return these fields\n| sort desc Score  // Sort by highest CVE score first",
+        "time_frame": { "relativeTime": 86400000 },
+        "viewOptions": { "type": "table", "commands": [] },
+        "gridRawStorageInfo": {
+          "sort": null,
+          "coldefs": {
+            "asset_name": "{\"pinned\":null,\"width\":408,\"hide\":false}"
+          },
+          "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+          "columnWidth": null
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": ["uvm_findings"],
+        "query_uses_library": false
+      },
+      "creator_mail": "ermoore@paloaltonetworks.com"
+    },
+    {
+      "widget_key": "xql_1751480113824",
+      "title": "Top 20 Container Images on Hosts",
+      "creation_time": 1751480113824,
+      "description": "Most frequent container images seen on hosts",
+      "data": {
+        "params": [],
+        "phrase": "dataset = asset_inventory  // Search in asset inventory database\n| filter xdm.asset.type.category = \"VM Instance\" // Only include types of VM Instance\n| fields xdm.asset.normalized_fields, xdm.asset.name as Name, xdm.asset.id as asset_id // Only return these fields\n| alter image_list = xdm.asset.normalized_fields -> [\"xdm.asset.relations\"][] // Parse JSON to return asset relationships\n| alter image_ids = arraymap(image_list, \"@element\"->[\"xdm.asset.relation.asset_id\"]) // Loop through asset relationship to return asset id's\n//| alter images = array_length(image_ids) // Count the number of asset id's\n| arrayexpand image_ids // List each unique asset id on it's own row\n| comp count() as host_count by image_ids // Count and group image id's by the number of times they are seen on hosts\n//\n| join (dataset = asset_inventory // Join asset inventory data to add back fields removed by comp count()\n| filter xdm.asset.type.category = \"Container Image\" // Only include types of Container Image\n| fields xdm.asset.id, xdm.asset.name // Only return these fields\n) as asset_lookup asset_lookup.xdm.asset.id = image_ids // Match asset id to image id\n//\n| fields host_count , xdm.asset.name as image_name, xdm.asset.id as asset_id // Only return these fields\n| sort desc host_count // Sort by most images on a host first\n| limit 20 // Limit to 20 results",
+        "time_frame": { "relativeTime": 86400000 },
+        "viewOptions": { "type": "table", "commands": [] },
+        "gridRawStorageInfo": {
+          "sort": null,
+          "coldefs": {},
+          "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+          "columnWidth": null
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": ["asset_inventory"],
+        "query_uses_library": false
+      },
+      "creator_mail": "ermoore@paloaltonetworks.com"
+    },
+    {
+      "widget_key": "xql_1751826024368",
+      "title": "Container Images Detected Across SDLC",
+      "creation_time": 1751826024368,
+      "description": "Display count of container images detected on a day grouped by SDLC stage",
+      "data": {
+        "params": [
+          { "name": "first_detected", "value": "*" },
+          { "name": "sdlc_stage", "value": "*" }
+        ],
+        "phrase": "dataset = asset_inventory // Search in asset inventory database\n| filter xdm.asset.type.category = \"Container Image\" // Filter to Container Images\n| fields xdm.asset.provider as Cloud, xdm.asset.name as Name, xdm.asset.first_observed as first_observed, xdm.asset.id as asset_id, xdm.asset.normalized_fields // Only return these fields\n| alter sdlc = xdm.asset.normalized_fields -> [\"xdm.development_cycle_stages\"][0] // Extract SDLC stage from JSON\n| filter sdlc != null // Ignore any results that have no SDLC stage\n| bin first_observed span = 1D // Group time based results to the same day\n| alter first_seen = arrayindex(split(to_string(first_observed), \" \"), 0) // Reduce the date display to just YYYY-MM-DD\n| filter first_seen = $first_detected // Dashboard drilldown filter to selected day\n| filter sdlc = $sdlc_stage // Dashboard drilldown filter to SDLC stage\n| comp count() as New_Container_Image by first_seen, sdlc  | sort desc first_seen // Total images by date first seen and SDLC stage, sort by most recent day first\n| limit 25 // Limit results to 25 items (not days)\n\n\n\n| view graph type = column subtype = grouped xaxis = first_seen yaxis = New_Container_Image series = sdlc default_limit = `false` seriescolor(\"DEPLOY\",\"#cf2fec\") seriescolor(\"RUNTIME\",\"#31ee0a\") seriescolor(\"BUILD\",\"#60a4e6\") ",
+        "time_frame": { "relativeTime": 86400000 },
+        "viewOptions": {
+          "type": "column",
+          "commands": [
+            { "command": { "op": "=", "name": "subtype", "value": "grouped" } },
+            {
+              "command": { "op": "=", "name": "xaxis", "value": "first_seen" }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "yaxis",
+                "value": "New_Container_Image"
+              }
+            },
+            { "command": { "op": "=", "name": "series", "value": "sdlc" } },
+            {
+              "command": {
+                "op": "=",
+                "name": "default_limit",
+                "value": "false"
+              }
+            },
+            {
+              "func": { "args": ["DEPLOY", "#cf2fec"], "name": "seriescolor" }
+            },
+            {
+              "func": { "args": ["RUNTIME", "#31ee0a"], "name": "seriescolor" }
+            },
+            { "func": { "args": ["BUILD", "#60a4e6"], "name": "seriescolor" } }
+          ]
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": ["asset_inventory"],
+        "query_uses_library": false
+      },
+      "creator_mail": "ermoore@paloaltonetworks.com"
+    },
+    {
+      "widget_key": "xql_1751907240613",
+      "title": "Container Images and Risk Score",
+      "creation_time": 1751907240613,
+      "description": "List of container images, when they were detected, and a calculated risk score based on weighted vulnerabilities",
+      "data": {
+        "params": [
+          { "name": "first_detected", "value": "*" },
+          { "name": "sdlc_stage", "value": "*" }
+        ],
+        "phrase": "dataset = asset_inventory // Search in asset inventory database\n| filter xdm.asset.type.category = \"Container Image\" // Filter to Container Images\n| fields xdm.asset.provider as Cloud, xdm.asset.name as Name, xdm.asset.first_observed as first_observed, xdm.asset.id as asset_id, xdm.asset.normalized_fields // Only return these fields\n| alter sdlc = xdm.asset.normalized_fields -> [\"xdm.development_cycle_stages\"][0] // Extract SDLC stage from JSON\n| filter sdlc != null // Ignore any results that have no SDLC stage\n| bin first_observed span = 1D // Group time based results to the same day\n| alter first_seen = arrayindex(split(to_string(first_observed), \" \"), 0) // Reduce the date display to just YYYY-MM-DD\n| filter first_seen = $first_detected // Dashboard drilldown filter to selected day\n| filter sdlc = $sdlc_stage // Dashboard drilldown filter to SDLC stage\n| fields Name, first_seen, sdlc, asset_id // Only return these fields\n| sort desc first_seen // Sort by most recent day first\n// \n| join ( dataset = uvm_findings // Join results with vulnerability database\n| filter asset_category = \"Container Image\" // Filter to Container Images\n| fields asset_name , cvss_severity , asset_id, has_kev , cve_risk_factors , fix_available // Only return these fields\n| alter severity = arrayindex(split(cvss_severity, \"_\"), 2) // Normalize cvss_severity field to only return \"Critical/High/Medium/Low\"\n| comp\n    count(if(severity = \"Critical\", 1, null)) as Criticals,\n    count(if(severity = \"High\", 1, null)) as Highs,\n    count(if(severity = \"Medium\", 1, null)) as Mediums,\n    count(if(severity = \"Low\", 1, null)) as Lows by asset_id // Count vulnerabilties by severity and create 4 new rows\n| alter temporal_score = add( add(multiply(25, Criticals), multiply(10, Highs)), add(multiply(5, Mediums),  multiply(1, Lows) ) ) // Calculate temporal score \n// Temporal score calculation = (Criticals * 25) + (Highs * 10) + (Medium * 5) + (Lows * 1)\n//\n| alter risk_score = round(multiply(100, divide(temporal_score, add(temporal_score, 100)))) // Calculate risk score\n// Risk score calculation = 100 * (temporal score / (temporal score + 100))\n//\n| fields  risk_score ,asset_id // Only return these fields\n) as risk risk.asset_id = asset_id // Match asset id from both databases to combine data\n//\n| join type = left  (dataset = findings // Join results with findings database but keep original data if no match\n| fields xdm.finding.category as Category , xdm.finding.asset_id // Only return these fields\n| filter Category contains \"MALWARE\" // Filter for MALWARE findings\n| comp count(Category) as Malware_Count by xdm.finding.asset_id // Count/Group MALWARE finding by asset id\n) as findings findings.xdm.finding.asset_id = asset_id // Match asset id from both databases to combine data\n//\n| alter score = if(Malware_Count >= 1, 90, risk_score ) // Hard code risk score to 90 if malware is detected, otherwise use the existing risk score\n| fields Name , first_seen , sdlc , score , asset_id // Only return these fields",
+        "time_frame": { "relativeTime": 86400000 },
+        "viewOptions": { "type": "table", "commands": [] },
+        "gridRawStorageInfo": {
+          "sort": null,
+          "coldefs": {
+            "Name": "{\"pinned\":null,\"width\":491,\"hide\":false}"
+          },
+          "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+          "columnWidth": "\"stretch\""
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": ["uvm_findings", "findings", "asset_inventory"],
+        "query_uses_library": false
+      },
+      "creator_mail": "ermoore@paloaltonetworks.com"
+    },
+    {
+      "widget_key": "xql_1751912615687",
+      "title": "Total Patch Fixes",
+      "creation_time": 1751912615687,
+      "description": "Count of container images that have packages with patch fixes.",
+      "data": {
+        "phrase": "dataset = uvm_findings // Search in vulnerability database\n| filter asset_category = \"Container Image\" // Filter to Container Images\n| filter fix_available = true // Only incude vulnerabilities that have a fix\n| fields asset_name, vulnerability_id as cve, cvss_severity, cvss_score, file_path,  package_type, package_version as current_version, fix_versions, asset_id, has_issue // Only return these fields\n| filter cvss_score > 0 // Filter out any CVSS with invalid scores \n| filter fix_versions != null // Filter out results that have no fix versions\n| filter has_issue = true // Only include results that have an issue\n| alter path = if(file_path = null or file_path = \"\", \"Update OS to Patch\", file_path) // If fixed path is null it is an OS patch, adjust text to match\n| alter semver = split(current_version,\".\") // Split package version at . in name\n| filter array_length(semver) != 2 // Filter to only include packages that use semantic versioning x.x.x\n| alter major = to_string(arrayindex(semver , 0)),\n        minor = to_string(arrayindex(semver, 1)),\n        patch = to_string(arrayindex(semver , 2))\n| alter fixed_version = arrayfilter(fix_versions, \"@element\" contains concat(major, \".\", minor, \".\") ) // filter for packages matching major.minor.\n| alter Severity = arrayindex(split(cvss_severity, \"_\"), 2) // Normalize severity field\n| filter fixed_version != null // Filter out identified fixes that have no fix version supplied\n//\n// Optional: Exclude images from results by filtering out specific image names\n//| filter asset_name not contains \"cortex-agent\"\n//\n| comp count() as Total //by cve\n//| comp sum(Total) as Fixable\n\n\n\n\n| view graph type = single subtype = standard yaxis = Total scale_threshold(\"#56c5ff\") headcolor = \"#cbe65e\" ",
+        "time_frame": { "relativeTime": 86400000 },
+        "viewOptions": {
+          "type": "single",
+          "commands": [
+            {
+              "command": { "op": "=", "name": "subtype", "value": "standard" }
+            },
+            { "command": { "op": "=", "name": "yaxis", "value": "Total" } },
+            { "func": { "args": ["#56c5ff"], "name": "scale_threshold" } },
+            {
+              "command": {
+                "op": "=",
+                "name": "headcolor",
+                "value": "\"#cbe65e\""
+              }
+            }
+          ]
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": ["uvm_findings"],
+        "query_uses_library": false
+      },
+      "creator_mail": "ermoore@paloaltonetworks.com"
+    },
+    {
+      "widget_key": "xql_1751913463660",
+      "title": "Total Images",
+      "creation_time": 1751913463660,
+      "description": "Total count of detected container images.",
+      "data": {
+        "params": [],
+        "phrase": "dataset = asset_inventory \n| filter xdm.asset.type.category = \"Container Image\"\n| fields xdm.asset.name as Name\n| comp count_distinct(Name) as Total\n\n| view graph type = single subtype = standard yaxis = Total scale_threshold(\"#56c5ff\") ",
+        "time_frame": { "relativeTime": 86400000 },
+        "viewOptions": {
+          "type": "single",
+          "commands": [
+            {
+              "command": { "op": "=", "name": "subtype", "value": "standard" }
+            },
+            { "command": { "op": "=", "name": "yaxis", "value": "Total" } },
+            { "func": { "args": ["\"#56c5ff\""], "name": "scale_threshold" } }
+          ]
+        },
+        "gridRawStorageInfo": {
+          "sort": null,
+          "coldefs": {},
+          "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+          "columnWidth": null
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": ["asset_inventory"],
+        "query_uses_library": false
+      },
+      "creator_mail": "ermoore@paloaltonetworks.com"
+    },
+    {
+      "widget_key": "xql_1751985218761",
+      "title": "Daily Container Image Risk Score",
+      "creation_time": 1751985218761,
+      "description": "Calculate a daily risk score based on the average risk of each container image detected on a given day",
+      "data": {
+        "params": [
+          { "name": "first_detected", "value": "*" },
+          { "name": "sdlc_stage", "value": "*" }
+        ],
+        "phrase": "dataset = asset_inventory // Search in asset inventory database\n| filter xdm.asset.type.category = \"Container Image\" // Filter to Container Images\n| fields xdm.asset.provider as Cloud, xdm.asset.name as Name, xdm.asset.first_observed as first_observed, xdm.asset.id as asset_id, xdm.asset.normalized_fields // Only return these fields\n| alter sdlc = xdm.asset.normalized_fields -> [\"xdm.development_cycle_stages\"][0] // Extract SDLC stage from JSON\n| filter sdlc != null // Ignore any results that have no SDLC stage\n| bin first_observed span = 1D // Group time based results to the same day\n| alter first_seen = arrayindex(split(to_string(first_observed), \" \"), 0) // Reduce the date display to just YYYY-MM-DD\n| filter first_seen = $first_detected // Dashboard drilldown filter to selected day\n| filter sdlc = $sdlc_stage // Dashboard drilldown filter to SDLC stage\n| fields Name, first_seen, sdlc, asset_id // Only return these fields\n| limit 200 // Limit results to 200\n| sort desc first_seen // Sort by most recent day first\n//\n| join ( dataset = uvm_findings // Join results with vulnerability database\n| filter asset_category = \"Container Image\" // Filter to Container Images\n| fields asset_name , cvss_severity , asset_id, has_kev , cve_risk_factors , fix_available // Only return these fields\n| alter severity = arrayindex(split(cvss_severity, \"_\"), 2) // Normalize cvss_severity field to only return \"Critical/High/Medium/Low\"\n| comp\n    count(if(severity = \"Critical\", 1, null)) as Criticals,\n    count(if(severity = \"High\", 1, null)) as Highs,\n    count(if(severity = \"Medium\", 1, null)) as Mediums,\n    count(if(severity = \"Low\", 1, null)) as Lows\nby asset_id // Count vulnerabilties by severity and create 4 new rows\n| alter temporal_score = add( add(multiply(25, Criticals), multiply(10, Highs)), add(multiply(5, Mediums),  multiply(1, Lows) ) ) // Calculate temporal score \n// Temporal score calculation = (Criticals * 25) + (Highs * 10) + (Medium * 5) + (Lows * 1)\n//\n| alter risk_score = round(multiply(100, divide(temporal_score, add(temporal_score, 100)))) // Calculate risk score\n// Risk score calculation = 100 * (temporal score / (temporal score + 100))\n//\n| fields  risk_score ,asset_id // Only return these fields\n) as risk risk.asset_id = asset_id // Match asset id from both databases to combine data\n//\n| join type = left  (dataset = findings // Join results with findings database but keep original data if no match\n| fields xdm.finding.category as Category , xdm.finding.asset_id // Only return these fields\n| filter Category contains \"MALWARE\" // Filter for MALWARE findings\n| comp count(Category) as Malware_Count by xdm.finding.asset_id // Count/Group MALWARE finding by asset id\n) as findings findings.xdm.finding.asset_id = asset_id // Match asset id from both databases to combine data\n//\n| alter score = if(Malware_Count >= 1, 90, risk_score ) // Hard code risk score to 90 if malware is detected, otherwise use the existing risk score\n| fields first_seen , score // Only return these fields\n| comp avg(score) as average_risk by first_seen // Average risk score by each image based on day\n| alter Daily_Image_Risk_Score = round(average_risk) // Round result to remove any decimal points\n| fields first_seen ,Daily_Image_Risk_Score // Only return these fields\n\n\n\n\n| view graph type = column subtype = grouped show_callouts = `true` xaxis = first_seen yaxis = Daily_Image_Risk_Score default_limit = `false` seriescolor(\"Daily_Image_Risk_Score\",\"#ad0e23\") legend = `false` ",
+        "time_frame": { "relativeTime": 86400000 },
+        "viewOptions": {
+          "type": "column",
+          "commands": [
+            { "command": { "op": "=", "name": "subtype", "value": "grouped" } },
+            {
+              "command": { "op": "=", "name": "show_callouts", "value": "true" }
+            },
+            {
+              "command": { "op": "=", "name": "xaxis", "value": "first_seen" }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "yaxis",
+                "value": "Daily_Image_Risk_Score"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "default_limit",
+                "value": "false"
+              }
+            },
+            {
+              "func": {
+                "args": ["Daily_Image_Risk_Score", "#ad0e23"],
+                "name": "seriescolor"
+              }
+            },
+            { "command": { "op": "=", "name": "legend", "value": "false" } }
+          ]
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": ["asset_inventory", "findings", "uvm_findings"],
+        "query_uses_library": false
+      },
+      "creator_mail": ""
+    }
+  ]
+}
