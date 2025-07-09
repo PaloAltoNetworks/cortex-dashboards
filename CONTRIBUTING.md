@@ -14,8 +14,7 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 - Scrub your exported dashboard JSON file of any sensitive information (drilldowns using internal or tenant URL's, email addresses, etc.) before sharing it.
 > [!NOTE]
 > If you have drilldowns that reference the URL of your tenant replace the tenant URL with: placeholder.com
->
-> Example Before: https//mytenant.xdr.us.paloaltonetworks.com/assets/inventory/compute/container-image
-> Example After: https//placeholder.com/assets/inventory/compute/container-image
+    - Before: https//mytenant.xdr.us.paloaltonetworks.com/assets/inventory/compute/container-image
+    - After: https//placeholder.com/assets/inventory/compute/container-image
 - Ensure that the **screenshot** of your dashboard is clear and captures the essence of your dashboard.
 - 
