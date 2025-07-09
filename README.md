@@ -1,10 +1,6 @@
-No problem\! Here's the updated README in Markdown:
-
------
-
 # Cortex Dashboards
 
-This repository serves as a collection of **customized and sharable dashboards** for the Cortex XSOAR platform. It provides a centralized location to find, share, and contribute valuable dashboard configurations to enhance your security operations.
+This repository serves as a collection of **customized and sharable dashboards** for the Palo Alto Networks Cortex platform. It provides a centralized location to find, share, and contribute valuable dashboard configurations to enhance your security operations.
 
 -----
 
@@ -16,9 +12,9 @@ You can find a comprehensive list and descriptions of all available dashboards i
 
 ## How to Import a Dashboard
 
-Importing a dashboard into Cortex XSOAR is a straightforward process:
+Importing a dashboard into Cortex is a straightforward process:
 
-1.  Navigate to the **"Dashboard Manager"** within the Cortex XSOAR platform.
+1.  Navigate to the **"Dashboard Manager"** within the Cortex platform.
 2.  In the upper right corner, click the **"Import"** button.
 3.  Upload the **JSON file** of the customized dashboard you wish to import.
 
@@ -26,12 +22,15 @@ Importing a dashboard into Cortex XSOAR is a straightforward process:
 
 ## How to Export a Dashboard
 
-Exporting a customized dashboard from Cortex XSOAR is just as simple:
+Exporting a customized dashboard from Cortex is just as simple:
 
 1.  In the **"Dashboard Manager,"** right-click on the dashboard you want to export.
 2.  Select **"Export"** from the context menu.
 
 -----
+
+
+
 
 ## Contributing
 
