@@ -16,6 +16,10 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 
 ## Required Steps
 
+Naming Conventions
+
+
+
 - Create a **new folder** in the appropriate section for your dashboard using lowercase letters and _ as a separator
 - the folder name should provide a deescription of the dashboard
 - The folder should contain 3 files: 
