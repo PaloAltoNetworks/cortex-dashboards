@@ -25,7 +25,7 @@ Importing a dashboard into Cortex is a straightforward process:
 
 -----
 
-## HExporting a Dashboard
+## Exporting a Dashboard
 
 Exporting a customized dashboard from Cortex is just as simple:
 
