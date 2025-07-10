@@ -84,12 +84,12 @@ Try to separate  your queries into logical sections using line breaks. This will
 ---
 
 Bad
-```xql
+```js
 dataset = asset_inventory | filter xdm.asset.type.category = "VM Instance" | fields xdm.asset.provider as Cloud | comp count() as Total by Cloud | alter Time = current_time() | target type = dataset append = true vm_instance_count
 ```
 
 Good
-```xql
+```js
 dataset = asset_inventory 
 | filter xdm.asset.type.category = "VM Instance"
 | fields xdm.asset.provider as Cloud
@@ -108,7 +108,7 @@ Joins should also be split apart where after specifying the joined dataset you l
 ---
 
 Bad
-```xql
+```js
 dataset = asset_inventory 
 | filter xdm.asset.type.category = "VM Instance" 
 | fields xdm.asset.id, xdm.asset.name 
@@ -121,7 +121,7 @@ dataset = asset_inventory
 ```
 
 Good
-```xql
+```js
 dataset = asset_inventory 
 | filter xdm.asset.type.category = "VM Instance" 
 | fields xdm.asset.id, xdm.asset.name 
@@ -143,7 +143,7 @@ Try to document your XQL with comments. This will help others understand what yo
 Addiotionally, if there are parts of a query where you want to add functionality (filtering out certain items, etc.), but you don't want to add it by default, leave the command in, but commented out. For these scenarios follow the same advice as above with an empty comment above and below the code.
 
 Example:
-```xql
+```js
 //
 // Optional: Exclude images from results by filtering out specific image names
 //| filter asset_name not contains "cortex-agent"
@@ -153,7 +153,7 @@ Example:
 ---
 
 Bad
-```xql
+```js
 dataset = asset_inventory  
 | filter xdm.asset.type.category = "VM Instance" 
 | fields xdm.asset.normalized_fields, xdm.asset.name as Name, xdm.asset.id as asset_id 
@@ -171,7 +171,7 @@ dataset = asset_inventory
 ```
 
 Good
-```xql
+```js
 dataset = asset_inventory  // Search in asset inventory database
 | filter xdm.asset.type.category = "VM Instance" // Only include types of VM Instance
 | fields xdm.asset.normalized_fields, xdm.asset.name as Name, xdm.asset.id as asset_id // Only return these fields
