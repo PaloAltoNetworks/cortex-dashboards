@@ -20,29 +20,29 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 
 - Create a new folder in the appropriate section for your dashboard
 
-    > [!NOTE] 
-    > The folder name should provide some detail about the dashboard, use only lowercase letters and _ as a separator
+> [!NOTE] 
+> The folder name should provide some detail about the dashboard, use only lowercase letters and _ as a separator
 
 - After exporting your dashboard from the console format your dashboard JSON file and name it dashboard.json
 
-    > [!TIP]
-    > Using a code formatter like [Prettier](https://prettier.io/) makes it easier to read and edit the JSON file
+> [!TIP]
+> Using a code formatter like [Prettier](https://prettier.io/) makes it easier to read and edit the JSON file
 
 - Scrub your exported dashboard JSON file of any sensitive information (drilldowns using internal or tenant URL's, email addresses, etc.) before committing it.
 
-    > [!WARNING]
-    > If you have drilldowns that reference the URL of your tenant replace the tenant URL with: placeholder.com
-    > - Example:
-    >    - Before: https://mytenant.xdr.us.paloaltonetworks.com/assets/inventory
-    >    - After: https://placeholder.com/assets/inventory
+> [!WARNING]
+> If you have drilldowns that reference the URL of your tenant replace the tenant URL with: placeholder.com
+> - Example:
+>    - Before: https://mytenant.xdr.us.paloaltonetworks.com/assets/inventory
+>    - After: https://placeholder.com/assets/inventory
 
 - Take a screen shot of your dashbord and name it dashboard.png
 
-    > [!NOTE] 
-    > Ensure that the screenshot of your dashboard captures only the dashbord and not the entire browser window. It is recommended to collapse the left sidebar to maximize the dashboard.
+> [!NOTE] 
+> Ensure that the screenshot of your dashboard captures only the dashbord and not the entire browser window. It is recommended to collapse the left sidebar to maximize the dashboard.
 
-    > [!TIP]
-    > For large dashboards with lots of widgets and information use your browser zoom to increase the size of what is captured in the screenshot.
+> [!TIP]
+> For large dashboards with lots of widgets and information use your browser zoom to increase the size of what is captured in the screenshot.
 
 - Save the dashboard JSON file and screenshot in the folder you created
 - Create a new file named README.md in the folder and copy/paste the [README template](#readme-structure) into this file
@@ -52,8 +52,8 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
     - dashboard.png
 - Edit the README.md file and replace the placeholders with the appropriate information
 
-    > [!NOTE]
-    > If your dasboard doesn't need any modifications just set the #### Requirements section to None and remove the existing markdown
+> [!NOTE]
+> If your dasboard doesn't need any modifications just set the #### Requirements section to None and remove the existing markdown
 
 
 
