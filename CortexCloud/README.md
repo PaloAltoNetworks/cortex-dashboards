@@ -1,6 +1,5 @@
 # Cortex Cloud Dashboards
 
-
 ---
 
 ## Dashboard Directory
