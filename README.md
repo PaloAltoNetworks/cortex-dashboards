@@ -5,7 +5,7 @@ This repository serves as a collection of customized and sharable dashboards for
 - [Dashboards](#dashboards)
 - [Importing a Dashboard](#importing-a-dashboard)
 - [Exporting a Dashboard](#exporting-a-dashboard)
-- [Contributing](#contributing)
+- [Contributing](CONTRIBUTING.md)
 
 -----
 
