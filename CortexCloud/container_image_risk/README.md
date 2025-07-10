@@ -10,6 +10,10 @@
 #### Description
 
 This dashboard displays detected container images over time and where they are detected in the SDLC (runtime, build, deploy).
+Each detected container image is assigned a weighted risk score based on the number and severity of vulnerabilities detected.
+The weighted risk score is calculated by the following formula:
+
+$$\left(Critical \times 25\right) + \left(High \times 15\right) + \left(Medium \times 5\right) + \left(Low \times 1\right)$$
 
 ---
 
