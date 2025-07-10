@@ -8,8 +8,10 @@ In order to maintain the quality and consistency of the dashboards, we have esta
     - [Format Dashboard JSON](#format-dashboard-json)
     - [Create a Dashboard Screenshot](#create-a-dashboard-screenshot)
     - [Create a README](#create-a-readme)
-
 - [XQL Formatting](#xql-structure)
+    - [Line Breaks](#line-breaks)
+    - [Joins](#joins)
+    - [Code Comments](#code-comments)
 - [Widget Documentation](#widget-documentation)
 - [README Structure](#readme-structure)
 - [Optional Steps](#optional-steps)
@@ -24,13 +26,13 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 
 ## Required Steps
 
-##### Create a Folder
+#### Create a Folder
 - Create a new folder in the appropriate section for your dashboard
 
 > [!NOTE] 
 > The folder name should provide some detail about the dashboard, use only lowercase letters and _ as a separator
 ---
-##### Format Dashboard JSON
+#### Format Dashboard JSON
 - After exporting your dashboard from the console format your dashboard JSON file and name it dashboard.json
 
 > [!TIP]
@@ -45,7 +47,7 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 >    - After: https://placeholder.com/assets/inventory
 
 ---
-##### Create a Dashboard Screenshot
+#### Create a Dashboard Screenshot
 - Take a screen shot of your dashbord and name it dashboard.png
 
 > [!NOTE] 
@@ -57,7 +59,7 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 - Save the dashboard JSON file and screenshot in the folder you created
 
 ---
-#### Create a README.md
+### Create a README.md
 - Create a new file named README.md in the folder and copy/paste the [README template](#readme-structure) into this file
 - Edit the README.md file and replace the placeholders with the appropriate information
 
@@ -72,6 +74,18 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 ---
 
 ## XQL Formatting
+
+In order to maintain consistency across dashboards we have established the following guidelines for formatting your XQL queries. Although some of these tasks may seem duplicative and mundane, it is important to understand not everyone who will be using these queries has the same level of experience. Because of this code readability and in-code comments are important.
+
+### Line Breaks
+
+Try to separate  your queries into logical sections using line breaks. This will make it easier to read and edit your XQL queries. Although you can string together multiple XQL queries in a single line, it is recommended to break them up into separate lines for readability.
+
+
+
+### Joins
+
+### Code Comments
 
 ---
 
