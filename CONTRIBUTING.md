@@ -18,9 +18,26 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 
 ## Required Steps
 
+- Create a new folder in the appropriate section for your dashboard
+> [!NOTE] 
+> The folder name should provide some detail about the dashboard, use only lowercase letters and _ as a separator
+- The folder will contain 3 files:
+    - README.md
+    - dashboard.json
+    - dashboard.png
+- After exporting your dashboard from the console format your dashboard JSON file 
 
+> [!TIP]
+> Using a code formatter like [Prettier](https://prettier.io/) makes it easier to read and edit the JSON file
+
+- Scrub your exported dashboard JSON file of any sensitive information (drilldowns using internal or tenant URL's, email addresses, etc.) before committing it.
+- Ensure that the screenshot of your dashboard captures only the dashbord and not the entire browser window. It is recommended to collapse the left sidebar to maximize the dashboard.
+
+> [!TIP]
+> For large dashboards with lots of widgets and information use your browser zoom to increase the size of what is captured in the screenshot.
 
 ### Naming Conventions
+
 
 
 
@@ -30,14 +47,14 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
     - README.md
     - dashboard.json
     - dashboard.png
-- After exporting your dashboard from the console, format your dashboard JSON file (recommedned to use a code formater like [Prettier](https://prettier.io/))
+
 - Scrub your exported dashboard JSON file of any sensitive information (drilldowns using internal or tenant URL's, email addresses, etc.) before sharing it.
 > [!NOTE]
 > If you have drilldowns that reference the URL of your tenant replace the tenant URL with: placeholder.com
 > - Example:
 >    - Before: https://mytenant.xdr.us.paloaltonetworks.com/assets/inventory
 >    - After: https://placeholder.com/assets/inventory
-- Ensure that the **screenshot** of your dashboard is clear and captures the essence of your dashboard.
+
 - 
 
 ---
