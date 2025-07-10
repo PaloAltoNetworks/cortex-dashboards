@@ -75,9 +75,11 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 
 In order to maintain consistency across dashboards we have established the following guidelines for formatting your XQL queries. Although some of these tasks may seem duplicative and mundane, it is important to understand not everyone who will be using these queries has the same level of experience. Because of this code readability and in-code comments are important.
 
+---
 ### Line Breaks
 
 Try to separate  your queries into logical sections using line breaks. This will make it easier to read and edit your XQL queries. Although you can string together multiple XQL queries in a single line, it is recommended to break them up into separate lines for readability.
+---
 
 Bad
 ```xql
@@ -93,11 +95,12 @@ dataset = asset_inventory
 | alter Time = current_time()
 | target type = dataset append = true vm_instance_count
 ```
-
+---
 ### Joins
 
 Joins by their nature tend to be complex and difficult to read. To make it easier to read and edit your joins, always start the line before the join with an empty comment //
 Joins should also be split apart where after specifying the joined dataset you line break, issue your filter, fields, etc., and then specify the "as joinname" on the final line and finish with another line break.
+---
 
 Bad
 ```xql
@@ -127,15 +130,13 @@ dataset = asset_inventory
 | comp count() as CVE_COUNT by asset_id , severity
 | sort desc asset_id 
 ```
-
+---
 ### Code Comments
 
 ---
-
 ## Widget Documentation
 
 ---
-
 ## README Structure
 
 ```shell
