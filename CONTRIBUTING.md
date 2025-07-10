@@ -4,8 +4,14 @@ In order to maintain the quality and consistency of the dashboards, we have esta
 
 - [Getting Started](#getting-started)
 - [Required Steps](#required-steps)
-    - [Naming Conventions](#naming-conventions)
-    - [README Structure](#readme-structure)
+    - [Create a Folder](#create-a-folder)
+    - [Format Dashboard JSON](#format-dashboard-json)
+    - [Create a Dashboard Screenshot](#create-a-dashboard-screenshot)
+    - [Create a README](#create-a-readme)
+
+- [XQL Formatting](#xql-structure)
+- [Widget Documentation](#widget-documentation)
+- [README Structure](#readme-structure)
 - [Optional Steps](#optional-steps)
 
 ---
@@ -18,11 +24,13 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 
 ## Required Steps
 
+##### Create a Folder
 - Create a new folder in the appropriate section for your dashboard
 
 > [!NOTE] 
 > The folder name should provide some detail about the dashboard, use only lowercase letters and _ as a separator
 
+##### Format Dashboard JSON
 - After exporting your dashboard from the console format your dashboard JSON file and name it dashboard.json
 
 > [!TIP]
@@ -36,6 +44,7 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 >    - Before: https://mytenant.xdr.us.paloaltonetworks.com/assets/inventory
 >    - After: https://placeholder.com/assets/inventory
 
+##### Create a Dashboard Screenshot
 - Take a screen shot of your dashbord and name it dashboard.png
 
 > [!NOTE] 
@@ -45,17 +54,27 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 > For large dashboards with lots of widgets and information use your browser zoom to increase the size of what is captured in the screenshot.
 
 - Save the dashboard JSON file and screenshot in the folder you created
+
+#### Create a README.md
 - Create a new file named README.md in the folder and copy/paste the [README template](#readme-structure) into this file
+- Edit the README.md file and replace the placeholders with the appropriate information
+
+> [!NOTE]
+> If your dasboard doesn't need any modifications just set the Requirements section to None and remove the existing markdown
+
 - Make sure your folder contains only these 3 files:
     - README.md
     - dashboard.json
     - dashboard.png
-- Edit the README.md file and replace the placeholders with the appropriate information
-
-> [!NOTE]
-> If your dasboard doesn't need any modifications just set the #### Requirements section to None and remove the existing markdown
 
 
+---
+
+## XQL Formatting
+
+---
+
+## Widget Documentation
 
 ---
 
