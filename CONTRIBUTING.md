@@ -4,7 +4,9 @@ In order to maintain the quality and consistency of the dashboards, we have esta
 
 - [Getting Started](#getting-started)
 - [Required Steps](#required-steps)
-- [README Structure](#readme-structure)
+    - [Naming Conventions](#naming-conventions)
+    - [README Structure](#readme-structure)
+- [Optional Steps](#optional-steps)
 
 ---
 
@@ -16,7 +18,9 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 
 ## Required Steps
 
-Naming Conventions
+
+
+### Naming Conventions
 
 
 
@@ -39,6 +43,51 @@ Naming Conventions
 ---
 
 ## README Structure
+
+## Container Image Risk Dashboard
+
+- [Repository Files](#repository-files)
+- [Description](#description)
+- [Requirements](#requirements)
+- [Dashboard Screenshot](#dashboard-screenshot)
+
+---
+
+#### Repository Files
+
+ | Files |  Description |
+ |----|----|
+ | [README.md](README.md) | Dashboard Description |
+ | [dashboard.json](dashboard.json) | Dashboard JSON |
+ | [dashboard.png](dashboard.png) | Dashboard Screenshot |
+
+---
+
+#### Description
+
+My dashboard details and description.
+
+---
+
+#### Requirements
+
+> [!IMPORTANT]
+> In order for the dashboard drilldowns to work, it is required to search/replace the dashboard.json for :point_right: `placeholder.com` and replace with your tenant URL.
+>
+> - Example:
+>    - Before: https://placeholder.com/assets/inventory
+>    - After: https://mytenant.xdr.us.paloaltonetworks.com/assets/inventory
+
+---
+
+#### Dashboard Screenshot
+
+![Dashboard](dashboard.png)
+
+
+
+
+
 
 
 [Country Flag Markdown Icons](https://github.com/ikatyang/emoji-cheat-sheet/blob/master/README.md#flags)
