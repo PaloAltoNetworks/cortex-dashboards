@@ -7,7 +7,8 @@ In order to maintain the quality and consistency of the dashboards, we have esta
     - [Create a Folder](#create-a-folder)
     - [Format Dashboard JSON](#format-dashboard-json)
     - [Create a Dashboard Screenshot](#create-a-dashboard-screenshot)
-    - [Create a README](#create-a-readme)
+    - [Create a Readme](#create-a-readme)
+    - [Edit Directory Readme](#edit-directory-readme)
 - [XQL Formatting](#xql-structure)
     - [Line Breaks](#line-breaks)
     - [Joins](#joins)
@@ -24,13 +25,13 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 
 ## Required Steps
 
-#### Create a Folder
+### Create a Folder
 - Create a new folder in the appropriate section for your dashboard
 
 > [!NOTE] 
 > The folder name should provide some detail about the dashboard, use only lowercase letters and _ as a separator
 ---
-#### Format Dashboard JSON
+### Format Dashboard JSON
 - After exporting your dashboard from the console format your dashboard JSON file and name it dashboard.json
 
 > [!TIP]
@@ -45,7 +46,7 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 >    - After: https://placeholder.com/assets/inventory
 
 ---
-#### Create a Dashboard Screenshot
+### Create a Dashboard Screenshot
 - Take a screen shot of your dashbord and name it dashboard.png
 
 > [!NOTE] 
@@ -68,6 +69,11 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
     - README.md
     - dashboard.json
     - dashboard.png
+
+---
+### Edit Directory Readme
+
+In the parent folder where your dashboadard is located, there is a directory listing of all the dashboards in that hierarchy. 
 
 ---
 
@@ -193,8 +199,10 @@ dataset = asset_inventory  // Search in asset inventory database
 ---
 ## Widget Documentation
 
+Make certain to include a descriptive name for your widgets, and a description of what the widget is showing. Although the description fields is not required for saving the widgets, in order for your PR to be accepted, the description must be included.
+
 ---
-## README Structure
+## Readme Structure
 
 ```shell
 ## Container Image Risk Dashboard
@@ -239,6 +247,9 @@ My dashboard details and description.
 
 ```
 
+---
+## Optional Steps
 
+Add your name and/or country flag to the parent directory of your dashboard.
 
 [Country Flag Markdown Icons](https://github.com/ikatyang/emoji-cheat-sheet/blob/master/README.md#flags)
