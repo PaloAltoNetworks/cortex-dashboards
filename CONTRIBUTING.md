@@ -102,6 +102,7 @@ dataset = asset_inventory
 ### Joins
 
 Joins by their nature tend to be complex and difficult to read. To make it easier to read and edit your joins, always start the line before the join with an empty comment //
+
 Joins should also be split apart where after specifying the joined dataset you line break, issue your filter, fields, etc., and then specify the "as joinname" on the final line and finish with another line break.
 
 ---
