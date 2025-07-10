@@ -29,7 +29,7 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 
 > [!NOTE] 
 > The folder name should provide some detail about the dashboard, use only lowercase letters and _ as a separator
-
+---
 ##### Format Dashboard JSON
 - After exporting your dashboard from the console format your dashboard JSON file and name it dashboard.json
 
@@ -44,6 +44,7 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 >    - Before: https://mytenant.xdr.us.paloaltonetworks.com/assets/inventory
 >    - After: https://placeholder.com/assets/inventory
 
+---
 ##### Create a Dashboard Screenshot
 - Take a screen shot of your dashbord and name it dashboard.png
 
@@ -55,6 +56,7 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 
 - Save the dashboard JSON file and screenshot in the folder you created
 
+---
 #### Create a README.md
 - Create a new file named README.md in the folder and copy/paste the [README template](#readme-structure) into this file
 - Edit the README.md file and replace the placeholders with the appropriate information
@@ -66,7 +68,6 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
     - README.md
     - dashboard.json
     - dashboard.png
-
 
 ---
 
