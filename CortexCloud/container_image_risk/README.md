@@ -42,7 +42,11 @@ In addtion, the dashboard displays the most common container images found on hos
 #### Requirements
 
 > [!IMPORTANT]
-> In order for the dashboard drilldowns to work, it is required to search/replace the dashboard.json for :point_right: ```placeholder.com``` and replace with your tenant URL.
+> In order for the dashboard drilldowns to work, it is required to search/replace the dashboard.json for :point_right: 
+```shell
+placeholder.com
+``` 
+> and replace with your tenant URL.
 >
 > - Example:
 >    - Before: https://placeholder.com/assets/inventory
