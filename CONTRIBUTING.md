@@ -44,6 +44,7 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 
 ## README Structure
 
+```shell
 ## Container Image Risk Dashboard
 
 - [Repository Files](#repository-files)
@@ -84,9 +85,7 @@ My dashboard details and description.
 
 ![Dashboard](dashboard.png)
 
-
-
-
+```
 
 
 
