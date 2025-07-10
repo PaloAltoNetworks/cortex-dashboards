@@ -1,15 +1,27 @@
 # Contributing Guidelines
 
-In order to maintain the quality and consistency of the dashboards, we have established the following guidelines:
+In order to maintain the quality and consistency of the dashboards, we have established the following guidelines.
+
+- [Getting Started](#getting-started)
+- [Required Steps](#required-steps)
+- [README Structure](#readme-structure)
+
+---
+
+## Getting Started
 
 To add a new dashboard start by [forking the repository](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo), creating a new branch, and then finally [submitting a pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests).
 
+---
 
-- Create a **new folder** for your dashboard using lowercase letters and _ as a separator.
+## Required Steps
+
+- Create a **new folder** in the appropriate section for your dashboard using lowercase letters and _ as a separator
+- the folder name should provide a deescription of the dashboard
 - The folder should contain 3 files: 
-    - **README.md** 
-    - **dashboard.json**
-    - **dashboard.png**
+    - README.md
+    - dashboard.json
+    - dashboard.png
 - After exporting your dashboard from the console, format your dashboard JSON file (recommedned to use a code formater like [Prettier](https://prettier.io/))
 - Scrub your exported dashboard JSON file of any sensitive information (drilldowns using internal or tenant URL's, email addresses, etc.) before sharing it.
 > [!NOTE]
@@ -19,3 +31,8 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 >    - After: https://placeholder.com/assets/inventory
 - Ensure that the **screenshot** of your dashboard is clear and captures the essence of your dashboard.
 - 
+
+---
+
+## README Structure
+
