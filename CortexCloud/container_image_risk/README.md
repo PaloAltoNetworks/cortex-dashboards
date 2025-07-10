@@ -5,10 +5,13 @@
 - [Requirements](#requirements)
 - [Dashboard Screenshot](#dashboard-screenshot)
 
+---
 
 #### Description
 
 This dashboard displays detected container images over time and where they are detected in the SDLC (runtime, build, deploy).
+
+---
 
 #### Repository Files
 
@@ -18,6 +21,7 @@ This dashboard displays detected container images over time and where they are d
  | [dashboard.json](dashboard.json) | Dashboard JSON |
  | [dashboard.png](dashboard.png) | Dashboard Screenshot |
 
+---
 
 #### Requirements
 
@@ -27,6 +31,8 @@ This dashboard displays detected container images over time and where they are d
 > - Example:
 >    - Before: https://placeholder.com/assets/inventory
 >    - After: https://mytenant.xdr.us.paloaltonetworks.com/assets/inventory
+
+---
 
 #### Dashboard Screenshot
 
