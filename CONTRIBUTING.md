@@ -86,6 +86,16 @@ Bad
 dataset = asset_inventory | filter xdm.asset.type.category = "VM Instance" | fields xdm.asset.provider as Cloud | comp count() as Total by Cloud | alter Time = current_time() | target type = dataset append = true vm_instance_count
 ```
 
+Good
+```xql
+dataset = asset_inventory 
+| filter xdm.asset.type.category = "VM Instance"
+| fields xdm.asset.provider as Cloud
+| comp count() as Total by Cloud
+| alter Time = current_time()
+| target type = dataset append = true vm_instance_count
+```
+
 ### Joins
 
 ### Code Comments
