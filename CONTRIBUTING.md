@@ -83,7 +83,7 @@ Example:
 
 Copy/Paste:
 ```shell
- | [Your Dashboard Name](your_folder_path/) | Your_dashboard_description. | [Yes](#drilldown-url) | [Optional](#optional-steps)  | [Optional](#optional-steps) |
+ | [Your Dashboard Name](your_folder_path/) | Your_dashboard_description. | [Yes](#drilldown-url) |  |  |
 ```
 
 ---
