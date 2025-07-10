@@ -15,6 +15,7 @@ The weighted risk score is calculated by the following formula:
 
 > [!NOTE]
 > Temporal = $$\left(Critical \times 25\right) + \left(High \times 15\right) + \left(Medium \times 5\right) + \left(Low \times 1\right)$$
+>
 > Risk = $$\left(\frac{Temporal}{Temporal + 100}\right) \times 100$$
 
 In addtion, the dashboard displays the most common container images found on hosts, and identifies vulnerable container image packages using [sematic versioning](https://semver.org/) that have patch fixes available.
