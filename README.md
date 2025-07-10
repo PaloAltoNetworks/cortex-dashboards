@@ -29,9 +29,6 @@ Exporting a customized dashboard from Cortex is just as simple:
 
 -----
 
-
-
-
 ## Contributing
 
 We welcome contributions from the community\! If you've created a useful dashboard or improved an existing one, please consider contributing.
@@ -55,3 +52,9 @@ To contribute:
 *Currently, this section is under development.* We will be adding links to official Cortex XSOAR documentation and other relevant resources soon.
 
 -----
+
+## Dashboards with URL Drilldowns
+
+> [!NOTE]
+> When importing dashboards with URL drilldowns that reference your tenant, in order for the drlldowns to work, it is required to search/replace
+> the dashboard.json for placeholder.com and replace with your tenant URL.
