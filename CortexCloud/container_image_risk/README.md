@@ -1,9 +1,19 @@
 ## Container Image Risk Dashboard
 
-- [Description](#description)
 - [Repository Files](#repository-files)
+- [Description](#description)
 - [Requirements](#requirements)
 - [Dashboard Screenshot](#dashboard-screenshot)
+
+---
+
+#### Repository Files
+
+ | Files |  Description |
+ |----|----|
+ | [README.md](README.md) | Dashboard Description |
+ | [dashboard.json](dashboard.json) | Dashboard JSON |
+ | [dashboard.png](dashboard.png) | Dashboard Screenshot |
 
 ---
 
@@ -28,15 +38,6 @@ In addtion, the dashboard displays the most common container images found on hos
 
 ---
 
-#### Repository Files
-
- | Files |  Description |
- |----|----|
- | [README.md](README.md) | Dashboard Description |
- | [dashboard.json](dashboard.json) | Dashboard JSON |
- | [dashboard.png](dashboard.png) | Dashboard Screenshot |
-
----
 
 #### Requirements
 
