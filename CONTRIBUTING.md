@@ -73,7 +73,14 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 ---
 ### Edit Directory Readme
 
-In the parent folder where your dashboadard is located, there is a directory listing of all the dashboards in that hierarchy. 
+In the parent folder where your dashboadard is located, there is a directory listing of all the dashboards in that hierarchy. Fill in the required fields for your dashboard and insert it alphabetically. Your dashboard position in the table can be easily identified by looking at the folder structure as they are sorted alphabetically by default.
+
+
+
+ | Dashboard Title |  Description  | Requires Updating URL's  | Contributor | Contributor Country |
+ |---|---|---|---|---|
+ | [Your Dashboard Name](your_folder_path/) | Your dashboard description. | [Yes](#drilldown-url) / No | [Optional](#optional-steps)  | [Optional](#optional-steps) |
+
 
 ---
 
