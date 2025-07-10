@@ -1,5 +1,14 @@
 # Container Image Risk Dashboard
 
+
+ | Files |  Description |
+ |----|----|
+ | [README.md](README.md) | Dashboard Description |
+ | [dashboard.json](dashboard.json) | Dashboard JSON |
+ | [dashboard.png](dashboard.png) | Dashboard Screenshot |
+
+ ---
+
 ### Description
 
 This dashboard displays detected container images over time and where they are detected in the SDLC (runtime, build, deploy).
