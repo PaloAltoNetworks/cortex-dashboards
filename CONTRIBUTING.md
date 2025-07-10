@@ -261,6 +261,8 @@ My dashboard details and description.
 ---
 ## Optional Steps
 
-Add your name and/or country flag to the parent directory of your dashboard.
+Of course it is totally optional, but it's always good to let people know :mega: the hard work you do :muscle:! 
+
+If you are so inlined, please ddd your name and/or country flag to the parent directory of your dashboard.
 
 [Country Flag Markdown Icons](https://github.com/ikatyang/emoji-cheat-sheet/blob/master/README.md#flags)
