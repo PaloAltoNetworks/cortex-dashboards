@@ -40,3 +40,5 @@ Naming Conventions
 
 ## README Structure
 
+
+[Country Flag Markdown Icons](https://github.com/ikatyang/emoji-cheat-sheet/blob/master/README.md#flags)
