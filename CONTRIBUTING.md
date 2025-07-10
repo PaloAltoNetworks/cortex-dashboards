@@ -22,8 +22,6 @@ In order to maintain the quality and consistency of the dashboards, we have esta
 
 To add a new dashboard start by [forking the repository](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo), creating a new branch, and then finally [submitting a pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests).
 
----
-
 ## Required Steps
 
 #### Create a Folder
@@ -97,6 +95,38 @@ dataset = asset_inventory
 ```
 
 ### Joins
+
+Joins by their nature tend to be complex and difficult to read. To make it easier to read and edit your joins, always start the line before the join with an empty comment //
+Joins should also be split apart where after specifying the joined dataset you line break, issue your filter, fields, etc., and then specify the "as joinname" on the final line and finish with another line break.
+
+Bad
+```xql
+dataset = asset_inventory 
+| filter xdm.asset.type.category = "VM Instance" 
+| fields xdm.asset.id, xdm.asset.name 
+| join (dataset = uvm_findings 
+| filter asset_category = "VM Instance" 
+| alter severity = arrayindex(split(cvss_severity, "_"), 2) 
+| fields asset_name , asset_id , severity ) as joined joined.asset_id = xdm.asset.id 
+| comp count() as CVE_COUNT by asset_id , severity
+| sort desc asset_id 
+```
+
+Good
+```xql
+dataset = asset_inventory 
+| filter xdm.asset.type.category = "VM Instance" 
+| fields xdm.asset.id, xdm.asset.name 
+//
+| join (dataset = uvm_findings 
+| filter asset_category = "VM Instance" 
+| alter severity = arrayindex(split(cvss_severity, "_"), 2) 
+| fields asset_name , asset_id , severity 
+) as joined joined.asset_id = xdm.asset.id 
+//
+| comp count() as CVE_COUNT by asset_id , severity
+| sort desc asset_id 
+```
 
 ### Code Comments
 
