@@ -16,7 +16,7 @@ This dashboard displays detected container images over time and where they are d
 
 ## Dashboard Screenshot
 
-![Dashboard](dashboard.pngpng)
+![Dashboard](dashboard.png)
 
 ## Dashboard Widgets
 
