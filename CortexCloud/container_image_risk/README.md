@@ -18,6 +18,9 @@ Temporal = $$\left(Critical \times 25\right) + \left(High \times 15\right) + \le
 
 Risk = $$\left(\frac{Temporal}{Temporal + 100}\right) \times 100$$
 
+> [!NOTE]
+> The highest risk score is 100, and the lowest risk score is 0. If malware is detected on a container image the risk score is set to 90.
+
 In addtion, the dashboard displays the most common container images found on hosts, and identifies vulnerable container image packages using [sematic versioning](https://semver.org/) that have patch fixes available.
 
 ---
