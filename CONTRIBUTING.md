@@ -138,6 +138,58 @@ dataset = asset_inventory
 ---
 ### Code Comments
 
+Try to document your XQL with comments. This will help others understand what your query is doing and why. This is especially important when you are working on a query that is complex or has a lot of joins.
+
+Addiotionally, if there are parts of a query where you want to add functionality (filtering out certain items, etc.), but you don't want to add it by default, leave the command in, but commented out. For these scenarios follow the same advice as above with an empty comment above and below the code.
+
+Example:
+```xql
+//
+// Optional: Exclude images from results by filtering out specific image names
+//| filter asset_name not contains "cortex-agent"
+//
+```
+
+---
+
+Bad
+```xql
+dataset = asset_inventory  
+| filter xdm.asset.type.category = "VM Instance" 
+| fields xdm.asset.normalized_fields, xdm.asset.name as Name, xdm.asset.id as asset_id 
+| alter image_list = xdm.asset.normalized_fields -> ["xdm.asset.relations"][] 
+| alter image_ids = arraymap(image_list, "@element"->["xdm.asset.relation.asset_id"]) 
+| arrayexpand image_ids 
+| comp count() as host_count by image_ids 
+| join (dataset = asset_inventory 
+| filter xdm.asset.type.category = "Container Image" 
+| fields xdm.asset.id, xdm.asset.name 
+) as asset_lookup asset_lookup.xdm.asset.id = image_ids 
+| fields host_count , xdm.asset.name as image_name, xdm.asset.id as asset_id
+| sort desc host_count 
+| limit 20 
+```
+
+Good
+```xql
+dataset = asset_inventory  // Search in asset inventory database
+| filter xdm.asset.type.category = "VM Instance" // Only include types of VM Instance
+| fields xdm.asset.normalized_fields, xdm.asset.name as Name, xdm.asset.id as asset_id // Only return these fields
+| alter image_list = xdm.asset.normalized_fields -> ["xdm.asset.relations"][] // Parse JSON to return asset relationships
+| alter image_ids = arraymap(image_list, "@element"->["xdm.asset.relation.asset_id"]) // Loop through asset relationship to return asset id's
+| arrayexpand image_ids // List each unique asset id on it's own row
+| comp count() as host_count by image_ids // Count and group image id's by the number of times they are seen on hosts
+//
+| join (dataset = asset_inventory // Join asset inventory data to add back fields removed by comp count()
+| filter xdm.asset.type.category = "Container Image" // Only include types of Container Image
+| fields xdm.asset.id, xdm.asset.name // Only return these fields
+) as asset_lookup asset_lookup.xdm.asset.id = image_ids // Match asset id to image id
+//
+| fields host_count , xdm.asset.name as image_name, xdm.asset.id as asset_id // Only return these fields
+| sort desc host_count // Sort by most images on a host first
+| limit 20 // Limit to 20 results
+```
+
 ---
 ## Widget Documentation
 
