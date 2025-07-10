@@ -81,7 +81,10 @@ In order to maintain consistency across dashboards we have established the follo
 
 Try to separate  your queries into logical sections using line breaks. This will make it easier to read and edit your XQL queries. Although you can string together multiple XQL queries in a single line, it is recommended to break them up into separate lines for readability.
 
-
+Bad
+```xql
+dataset = asset_inventory | filter xdm.asset.type.category = "VM Instance" | fields xdm.asset.provider as Cloud | comp count() as Total by Cloud | alter Time = current_time() | target type = dataset append = true vm_instance_count
+```
 
 ### Joins
 
