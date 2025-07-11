@@ -18,7 +18,7 @@ jobs:
             base_sha=${{ github.event.pull_request.base.sha }}
             head_sha=${{ github.event.pull_request.head.sha }}
             nothingToScan=false
-            echo "nothingToScan=false" >> $GITHUB_OUTPUT
+            echo "$nothingToScan" >> $GITHUB_OUTPUT
 
             echo "Comparing base commit $base_sha with head commit $head_sha"
 
@@ -29,7 +29,7 @@ jobs:
             if [ -z "$json_files" ]; then
                 echo "No JSON files were changed in this PR. ✅"
                 nothingToScan=true
-                echo $nothingToScan >> $GITHUB_OUTPUT
+                echo "$nothingToScan" >> $GITHUB_OUTPUT
                 exit 0
             fi
 
