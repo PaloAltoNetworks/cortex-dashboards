@@ -102,7 +102,7 @@
                 "viewOptions": { "type": "table", "commands": [] },
                 "drilldown_config": {
                   "actionData": {
-                    "url": "https://placeholder.com/assets/inventory/compute/container-image?id=$row.asset_id&assetId=$row.asset_id",
+                    "url": "https://placeholde.com/assets/inventory/compute/container-image?id=$row.asset_id&assetId=$row.asset_id",
                     "openInNewTab": true
                   },
                   "actionType": "open_custom_url"
