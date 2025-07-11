@@ -57,3 +57,26 @@ jobs:
 
             echo "---"
             echo "All checks passed for all JSON files. 🎉"
+
+      - name: Check for tenant URL in JSON files
+        if: steps.check-json-files.outputs.nothingToScan != 'true'
+        run: |
+            echo "Checking the following JSON files:"
+            echo "$json_files"
+
+            for file in $json_files; do
+                echo "---"
+                echo "Checking file: $file"
+                if ! grep -q '"url":' "$file"; then
+                echo "➡️ Key 'url' not found in $file. Skipping."
+                continue
+                fi
+
+                url_value=$(jq -r '.url' "$file")
+                if [[ "$url_value" == *"paloaltonetworks.com"* ]]; then
+                    echo "✅ Success: 'url' does not containe tenant URL."
+                else
+                    echo "❌ Error: 'url' should not contain tenant URL, but found '$url_value'."
+                exit 1
+                fi
+            done
