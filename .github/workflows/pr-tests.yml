@@ -49,7 +49,7 @@ jobs:
                 continue
                 fi
 
-                creator_mail_value=$(jq -r '.creator_mail' "$file")
+                creator_mail_value=$(jq -r '.. | .creator_mail? // empty' "$file")
                 if [[ "$creator_mail_value" == "" || "$creator_mail_value" == "null" ]]; then
                     echo "✅ Success: 'creator_mail' is an empty string."
                 else
@@ -78,6 +78,7 @@ jobs:
                 fi
 
                 url_value=$(jq -r '.url' "$file")
+                url_value=$(jq -r '.. | .url? // empty' "$file")
                 if [[ "$url_value" == *"paloaltonetworks.com"* ]]; then
                     echo "✅ Success: 'url' does not containe tenant URL."
                 else
