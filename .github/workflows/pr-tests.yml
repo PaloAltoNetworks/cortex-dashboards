@@ -13,29 +13,45 @@ jobs:
         with:
             fetch-depth: 0
 
-      - name: Find JSON files in PR
+      - name: Find and check creator_mail
         run: |
-          # Find all json files in the PR's changed files
-          files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep '.json$')
+            base_sha=${{ github.event.pull_request.base.sha }}
+            head_sha=${{ github.event.pull_request.head.sha }}
 
-          if [ -z "$files" ]; then
-            echo "No JSON files found in this PR."
-          fi
+            echo "Comparing base commit $base_sha with head commit $head_sha"
+
+            # Get a list of changed JSON files. The `|| true` ensures this line
+            # doesn't fail the script if no .json files are found.
+            json_files=$(git diff --name-only $base_sha $head_sha | grep '.json$' || true)
+
+            # Check if the result is empty. If so, it's a success.
+            if [ -z "$json_files" ]; then
+                echo "No JSON files were changed in this PR. ✅"
+                exit 0 # Explicitly exit with a success code
+            fi
 
       - name: Check for email address in JSON files
         run: |
-          for file in $files; do
-            echo "Checking $file..."
-            # Search for the key "creator_mail" and check if its value is ""
-            if grep -q '"creator_mail":' "$file"; then
-              creator_mail_value=$(jq -r '.creator_mail' "$file")
-              if [ "$creator_mail_value" == "" ]; then
-                echo "Success: 'creator_mail' in $file has an empty string value."
-              else
-                echo "Error: 'creator_mail' in $file should have an empty string value, but found '$creator_mail_value'."
+            # If we get here, files were found. Now loop and check them.
+            echo "Checking the following JSON files:"
+            echo "$json_files"
+
+            for file in $json_files; do
+                echo "---"
+                echo "Checking file: $file"
+                if ! grep -q '"creator_mail":' "$file"; then
+                echo "➡️ Key 'creator_mail' not found in $file. Skipping."
+                continue
+                fi
+
+                creator_mail_value=$(jq -r '.creator_mail' "$file")
+                if [ "$creator_mail_value" == "" ]; then
+                echo "✅ Success: 'creator_mail' is an empty string."
+                else
+                echo "❌ Error: 'creator_mail' should be an empty string, but found '$creator_mail_value'."
                 exit 1
-              fi
-            else
-              echo "Key 'creator_mail' not found in $file."
-            fi
-          done
+                fi
+            done
+
+            echo "---"
+            echo "All checks passed for all JSON files. 🎉"
