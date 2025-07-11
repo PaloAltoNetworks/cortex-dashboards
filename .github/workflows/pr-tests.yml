@@ -20,8 +20,9 @@ jobs:
         run: |
             echo "Finding changed files for PR #${{ github.event.pull_request.number }}"
 
-            # Use the gh CLI to get a list of changed files in the PR.
             changed_files=$(gh pr diff ${{ github.event.pull_request.number }} --name-only | grep '\.json$' || true)
+
+            echo $changed_files
 
             echo "json_files<<EOF" >> $GITHUB_OUTPUT
             echo "$changed_files" >> $GITHUB_OUTPUT
