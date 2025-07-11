@@ -40,11 +40,11 @@ jobs:
                 echo "---"
                 echo "Checking file: $file for 'email addresses'"
 
-                if jq -e '([.. | .creator_mail? | select(. == null or . == "")] | length) == 0' "$file"; then
-                    echo "✅ No email addresses in $file were detected."
-                else
-                    echo "❌ An email address was detected in a creator_mail key in $file"
+                if jq -e '([.. | .creator_mail? | select(. != null or . != "")] | length) == 0' "$file"; then
+                    echo "❌ A non-null or non-empty string value was detected in a creator_mail key in $file"
                     exit 1
+                else
+                    echo "✅ No email addresses in $file were detected."
                 fi
             done
 
@@ -90,7 +90,6 @@ jobs:
             for file in $json_files; do
                 echo "---"
                 echo "Checking file: $file for 'description'"
-
                 if jq -e '([.. | .description? | select(. == null or . == "")] | length) == 0' "$file"; then
                     echo "✅ All descriptions in $file are valid."
                 else
