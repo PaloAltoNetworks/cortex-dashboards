@@ -99,8 +99,35 @@ jobs:
                 done
             done
 
-      - name: Test Success
+      - name: Check for placeholder.com URL in JSON files
         if: steps.check-json-files.outputs.json_files != ''
         run: |
-            echo "---"
-            echo "All checks passed for all JSON files. 🎉"
+            echo "Checking the following JSON files:"
+
+            json_files=$(echo ${{ steps.check-json-files.outputs.json_files }})
+            echo "$json_files"
+
+            for file in $json_files; do
+                echo "---"
+                echo "Checking file: $file"
+                if ! grep -q '"url":' "$file"; then
+                echo "➡️ Key 'url' not found in $file. Skipping."
+                continue
+                fi
+
+            # Pipe the jq output directly into a while read loop
+            jq -r '.. | .url? // empty' "$file" | while IFS= read -r url; do
+                # Skip any empty lines that jq might output
+                if [ -z "$url" ]; then
+                    continue
+                fi
+
+                echo "Checking URL"
+                if [[ "$url" == *"placeholder.com"* ]]; then
+                    echo "✅ Found 'placeholder.com' in this URL."
+                else
+                    echo "❌ URL found at $url, but it is missing 'placeholder.com'."
+                    exit 1
+                fi
+                done
+            done
