@@ -156,7 +156,7 @@ jobs:
                 fi
 
                 echo "Checking URL"
-                if [[ "$description" == "" || "$description" == "null" ]]; then
+                if [[ "$description" == "" || "$description" == null ]]; then
                     echo "❌ Missing description in widget or dashboard."
                     exit 1
                     
