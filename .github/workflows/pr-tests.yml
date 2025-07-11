@@ -14,10 +14,10 @@ jobs:
             fetch-depth: 0
 
       - name: Check for any changed JSON files
+        id: check-json-files
         run: |
             base_sha=${{ github.event.pull_request.base.sha }}
             head_sha=${{ github.event.pull_request.head.sha }}
-            nothingToScan=false
             echo "nothingToScan=false" >> $GITHUB_OUTPUT
 
             echo "Comparing base commit $base_sha with head commit $head_sha"
@@ -28,13 +28,12 @@ jobs:
             # Check if the result is empty. If so, it's a success.
             if [ -z "$json_files" ]; then
                 echo "No JSON files were changed in this PR. ✅"
-                nothingToScan=true
                 echo "nothingToScan=true" >> $GITHUB_OUTPUT
                 exit 0
             fi
 
       - name: Check for email address in JSON files
-        if: ${{ env.nothingToScan != 'true' }}
+        if: steps.check-json-files.outputs.nothingToScan != 'true'
         run: |
             echo "Checking the following JSON files:"
             echo "$json_files"
