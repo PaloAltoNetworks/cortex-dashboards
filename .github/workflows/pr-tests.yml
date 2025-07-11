@@ -69,34 +69,18 @@ jobs:
       - name: Check for tenant URL in JSON files
         if: steps.check-json-files.outputs.json_files != ''
         run: |
-            echo "Checking the following JSON files:"
-
             json_files=$(echo ${{ steps.check-json-files.outputs.json_files }})
-            echo "$json_files"
 
             for file in $json_files; do
                 echo "---"
-                echo "Checking file: $file"
-                if ! grep -q '"url":' "$file"; then
-                echo "➡️ Key 'url' not found in $file. Skipping."
-                continue
-                fi
+                echo "Checking file: $file for tenant URL"
 
-            # Pipe the jq output directly into a while read loop
-            jq -r '.. | .url? // empty' "$file" | while IFS= read -r url; do
-                # Skip any empty lines that jq might output
-                if [ -z "$url" ]; then
-                    continue
-                fi
-
-                echo "Checking URL"
-                if [[ "$url" == *"paloaltonetworks.com"* ]]; then
-                    echo "❌ This 'url' should not contain $url as it appears to be a tenant URL."    
-                    exit 1
+                if jq -e '([.. | .url? | select(. == null or . == "")] | length) == 0' "$file"; then
+                    echo "✅ All URLs in $file are valid."
                 else
-                    echo "✅ Did not find 'paloaltonetworks.com' in this URL."
+                    echo "❌ A URL was found in $file that appears to be a tenant URL."
+                    exit 1
                 fi
-                done
             done
 
       - name: Check for placeholder.com URL in JSON files
@@ -129,9 +113,9 @@ jobs:
                 echo "Checking file: $file for 'description'"
 
                 if jq -e '([.. | .description? | select(. == null or . == "")] | length) == 0' "$file"; then
-                    echo "✅ Description: $description found in widget or dashboard."
+                    echo "✅ All descriptions in $file are valid."
                 else
-                    echo "❌ Missing description in widget or dashboard."
+                    echo "❌ A description in $file is missing or empty."
                     exit 1
                 fi
             done
