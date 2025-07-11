@@ -7,6 +7,8 @@ on:
 jobs:
   test-json:
     runs-on: ubuntu-latest
+    env:
+        GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -16,118 +18,83 @@ jobs:
       - name: Check for any changed JSON files
         id: check-json-files
         run: |
-            base_sha=${{ github.event.pull_request.base.sha }}
-            head_sha=${{ github.event.pull_request.head.sha }}
+            echo "Finding changed files for PR #${{ github.event.pull_request.number }}"
 
-            echo "Comparing base commit $base_sha with head commit $head_sha"
+            # Get the raw multi-line output from the gh command
+            changed_files_multiline=$(gh pr diff ${{ github.event.pull_request.number }} --name-only | grep '\.json$' || true)
 
-            # Get a list of changed JSON files. The `|| true` ensures this line doesn't fail the script if no .json files are found.
-            changed_files=$(git diff --name-only $base_sha $head_sha | grep '.json$' || true)
+            # Convert the multi-line list into a single-line, space-separated string.
+            changed_files_single_line=$(echo $changed_files_multiline)
 
-            echo "json_files<<EOF" >> $GITHUB_OUTPUT
-            echo "$changed_files" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+            echo "The following files will be checked: $changed_files_single_line"
 
-            # Check if the result is empty. If so, it's a success.
-            if [ -z "$changed_files" ]; then
-                echo "No JSON files were changed in this PR. ✅"
-                exit 0
-            fi
+            # Set the output as a single line
+            echo "json_files=$changed_files_single_line" >> $GITHUB_OUTPUT
 
       - name: Check for email address in JSON files
         if: steps.check-json-files.outputs.json_files != ''
         run: |
-            echo "Checking the following JSON files:"
             json_files=$(echo ${{ steps.check-json-files.outputs.json_files }})
-            echo "$json_files"
 
             for file in $json_files; do
                 echo "---"
-                echo "Checking file: $file"
-                if ! grep -q '"creator_mail":' "$file"; then
-                echo "➡️ Key 'creator_mail' not found in $file. Skipping."
-                continue
-                fi
+                echo "Checking file: $file for 'email addresses'"
 
-            # Pipe the jq output directly into a while read loop
-            jq -r '.. | .creator_mail? // empty' "$file" | while IFS= read -r creator_mail; do
-                # Skip any empty lines that jq might output
-                if [ -z "$creator_mail" ]; then
-                    continue
-                fi
-
-                echo "Checking Creator Email"
-                if [ "$creator_mail" == "" ]; then
-                    echo "✅ Success: 'creator_mail' is an empty string."
+                if jq -e '([.. | .creator_mail? | select(. == null or . == "")] | length) == 0' "$file"; then
+                    echo "✅ No email addresses in $file were detected."
                 else
-                    echo "❌ Error: 'creator_mail' should be an empty string, but found '$creator_mail'."
+                    echo "❌ An email address was detected in a creator_mail key in $file"
                     exit 1
                 fi
-                done
             done
 
       - name: Check for tenant URL in JSON files
         if: steps.check-json-files.outputs.json_files != ''
         run: |
-            echo "Checking the following JSON files:"
-
             json_files=$(echo ${{ steps.check-json-files.outputs.json_files }})
-            echo "$json_files"
 
             for file in $json_files; do
                 echo "---"
-                echo "Checking file: $file"
-                if ! grep -q '"url":' "$file"; then
-                echo "➡️ Key 'url' not found in $file. Skipping."
-                continue
-                fi
+                echo "Checking file: $file for tenant URL"
 
-            # Pipe the jq output directly into a while read loop
-            jq -r '.. | .url? // empty' "$file" | while IFS= read -r url; do
-                # Skip any empty lines that jq might output
-                if [ -z "$url" ]; then
-                    continue
-                fi
-
-                echo "Checking URL"
-                if [[ "$url" == *"paloaltonetworks.com"* ]]; then
-                    echo "❌ This 'url' should not contain $url as it appears to be a tenant URL."    
-                    exit 1
+                if jq -e '([.. | .url? | select(contains("paloaltonetworks.com")?)] | length) == 0' "$file"; then
+                    echo "✅ All URLs in $file are valid."
                 else
-                    echo "✅ Did not find 'paloaltonetworks.com' in this URL."
+                    echo "❌ A URL was found in $file that appears to be a tenant URL."
+                    exit 1
                 fi
-                done
             done
 
       - name: Check for placeholder.com URL in JSON files
         if: steps.check-json-files.outputs.json_files != ''
         run: |
-            echo "Checking the following JSON files:"
-
             json_files=$(echo ${{ steps.check-json-files.outputs.json_files }})
-            echo "$json_files"
 
             for file in $json_files; do
                 echo "---"
-                echo "Checking file: $file"
-                if ! grep -q '"url":' "$file"; then
-                echo "➡️ Key 'url' not found in $file. Skipping."
-                continue
-                fi
+                echo "Checking file: $file for 'placeholder.com' URL"
 
-            # Pipe the jq output directly into a while read loop
-            jq -r '.. | .url? // empty' "$file" | while IFS= read -r url; do
-                # Skip any empty lines that jq might output
-                if [ -z "$url" ]; then
-                    continue
-                fi
-
-                echo "Checking URL"
-                if [[ "$url" == *"placeholder.com"* ]]; then
-                    echo "✅ Found 'placeholder.com' in this URL."
+                if jq -e '([.. | .url? | select(. != null and (contains("placeholder.com") | not))] | length) == 0' "$file"; then
+                    echo "✅ All URLs in $file are valid."
                 else
-                    echo "❌ URL found at $url, but it is missing 'placeholder.com'."
+                    echo "❌ An invalid URL (that does not contain 'placeholder.com') was found in $file."
                     exit 1
                 fi
-                done
+            done
+
+      - name: Check for description in widgets and dashboard in JSON files
+        if: steps.check-json-files.outputs.json_files != ''
+        run: |
+            json_files=$(echo ${{ steps.check-json-files.outputs.json_files }})
+
+            for file in $json_files; do
+                echo "---"
+                echo "Checking file: $file for 'description'"
+
+                if jq -e '([.. | .description? | select(. == null or . == "")] | length) == 0' "$file"; then
+                    echo "✅ All descriptions in $file are valid."
+                else
+                    echo "❌ A description in $file is missing or empty."
+                    exit 1
+                fi
             done
