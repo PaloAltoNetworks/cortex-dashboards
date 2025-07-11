@@ -295,7 +295,7 @@
                 },
                 "drilldown_config": {
                   "actionData": {
-                    "url": "https://placehold.com/assets/inventory/compute/container-image",
+                    "url": "https://placeholder.com/assets/inventory/compute/container-image",
                     "openInNewTab": true
                   },
                   "actionType": "open_custom_url"
@@ -319,7 +319,7 @@
                 "viewOptions": { "type": "table", "commands": [] },
                 "drilldown_config": {
                   "actionData": {
-                    "url": "https://placeholder.com/exposure-management/vulnerability-issues?cveId=$row.cve&assetId=$row.asset_id",
+                    "url": "https://p.paloaltonetworks.com/exposure-management/vulnerability-issues?cveId=$row.cve&assetId=$row.asset_id",
                     "openInNewTab": true
                   },
                   "actionType": "open_custom_url"

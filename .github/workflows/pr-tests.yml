@@ -24,12 +24,11 @@ jobs:
             changed_files_multiline=$(gh pr diff ${{ github.event.pull_request.number }} --name-only | grep '\.json$' || true)
 
             # Convert the multi-line list into a single-line, space-separated string.
-            # This is the format your existing 'for' loops expect.
             changed_files_single_line=$(echo $changed_files_multiline)
 
             echo "The following files will be checked: $changed_files_single_line"
 
-            # Set the output as a single line, making it compatible with your downstream steps
+            # Set the output as a single line
             echo "json_files=$changed_files_single_line" >> $GITHUB_OUTPUT
 
       - name: Check for email address in JSON files
