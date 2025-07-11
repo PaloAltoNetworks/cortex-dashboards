@@ -25,6 +25,8 @@ jobs:
             # Get a list of changed JSON files. The `|| true` ensures this line doesn't fail the script if no .json files are found.
             json_files=$(git diff --name-only $base_sha $head_sha | grep '.json$' || true)
 
+            echo "Changed JSON files: $json_files"
+
             # Check if the result is empty. If so, it's a success.
             if [ -z "$json_files" ]; then
                 echo "No JSON files were changed in this PR. ✅"
