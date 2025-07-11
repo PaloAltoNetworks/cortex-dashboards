@@ -20,13 +20,17 @@ jobs:
         run: |
             echo "Finding changed files for PR #${{ github.event.pull_request.number }}"
 
-            changed_files=$(gh pr diff ${{ github.event.pull_request.number }} --name-only | grep '\.json$' || true)
+            # Get the raw multi-line output from the gh command
+            changed_files_multiline=$(gh pr diff ${{ github.event.pull_request.number }} --name-only | grep '\.json$' || true)
 
-            echo $changed_files
+            # Convert the multi-line list into a single-line, space-separated string.
+            # This is the format your existing 'for' loops expect.
+            changed_files_single_line=$(echo $changed_files_multiline)
 
-            echo "json_files<<EOF" >> $GITHUB_OUTPUT
-            echo "$changed_files" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+            echo "The following files will be checked: $changed_files_single_line"
+
+            # Set the output as a single line, making it compatible with your downstream steps
+            echo "json_files=$changed_files_single_line" >> $GITHUB_OUTPUT
 
       - name: Check for email address in JSON files
         if: steps.check-json-files.outputs.json_files != ''
