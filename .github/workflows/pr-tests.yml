@@ -149,7 +149,7 @@ jobs:
                 fi
 
             # Pipe the jq output directly into a while read loop
-            jq -r '.. | .description? // empty' "$file" | while IFS= read -r url; do
+            jq -r '.. | .description? // empty' "$file" | while IFS= read -r description; do
                 # Skip any empty lines that jq might output
                 if [ -z "$description" ]; then
                     continue
