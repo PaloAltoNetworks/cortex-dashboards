@@ -353,7 +353,7 @@
                 "viewOptions": { "type": "table", "commands": [] },
                 "drilldown_config": {
                   "actionData": {
-                    "url": "https://placeholder.com/assets/inventory?id=$row.asset_id&assetId=$row.asset_id",
+                    "url": "https://something.com/assets/inventory?id=$row.asset_id&assetId=$row.asset_id",
                     "openInNewTab": true
                   },
                   "actionType": "open_custom_url"
