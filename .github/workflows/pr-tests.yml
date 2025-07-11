@@ -29,7 +29,7 @@ jobs:
             echo "EOF" >> $GITHUB_OUTPUT
 
             # Check if the result is empty. If so, it's a success.
-            if [ -z "$json_files" ]; then
+            if [ -z "$changed_files" ]; then
                 echo "No JSON files were changed in this PR. ✅"
                 exit 0
             fi
@@ -50,7 +50,7 @@ jobs:
                 fi
 
                 creator_mail_value=$(jq -r '.creator_mail' "$file")
-                if [ "$creator_mail_value" == "" ]; then
+                if [[ "$creator_mail_value" == "" || "$creator_mail_value" == "null" ]]; then
                     echo "✅ Success: 'creator_mail' is an empty string."
                 else
                     echo "❌ Error: 'creator_mail' should be an empty string, but found '$creator_mail_value'."
