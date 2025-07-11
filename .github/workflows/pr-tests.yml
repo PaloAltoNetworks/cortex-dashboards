@@ -1,0 +1,40 @@
+name: PR JSON Check
+
+on:
+  pull_request:
+    branches: [ main ] 
+
+jobs:
+  test-json:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Find JSON files in PR
+        run: |
+          # Find all json files in the PR's changed files
+          files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep '.json$')
+
+          if [ -z "$files" ]; then
+            echo "No JSON files found in this PR."
+            exit 0
+          fi
+
+      - name: Check for email address in JSON files
+        run: |
+          for file in $files; do
+            echo "Checking $file..."
+            # Search for the key "creator_mail" and check if its value is ""
+            if grep -q '"creator_mail":' "$file"; then
+              creator_mail_value=$(jq -r '.creator_mail' "$file")
+              if [ "$creator_mail_value" == "" ]; then
+                echo "Success: 'creator_mail' in $file has an empty string value."
+              else
+                echo "Error: 'creator_mail' in $file should have an empty string value, but found '$creator_mail_value'."
+                exit 1
+              fi
+            else
+              echo "Key 'creator_mail' not found in $file."
+            fi
+          done
