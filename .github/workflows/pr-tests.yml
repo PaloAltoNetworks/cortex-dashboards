@@ -75,7 +75,7 @@ jobs:
                 echo "---"
                 echo "Checking file: $file for tenant URL"
 
-                if jq -e '([.. | .url? | select(. == null or . == "")] | length) == 0' "$file"; then
+                if jq -e '([.. | .url? | select(. contains("paloaltonetworks.com"))] | length) == 0' "$file"; then
                     echo "✅ All URLs in $file are valid."
                 else
                     echo "❌ A URL was found in $file that appears to be a tenant URL."
