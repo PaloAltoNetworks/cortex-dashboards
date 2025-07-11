@@ -77,12 +77,20 @@ jobs:
                 continue
                 fi
 
-                url_value=$(jq -r '.url' "$file")
-                url_value=$(jq -r '.. | .url? // empty' "$file")
-                if [[ "$url_value" == *"paloaltonetworks.com"* ]]; then
-                    echo "✅ Success: 'url' does not containe tenant URL."
-                else
-                    echo "❌ Error: 'url' should not contain tenant URL, but found '$url_value'."
+            # Pipe the jq output directly into a while read loop
+            jq -r '.. | .url? // empty' "$file" | while IFS= read -r url; do
+      
+            # Skip any empty lines that jq might output
+            if [ -z "$url" ]; then
+                continue
+            fi
+
+            echo "Checking URL: $url"
+            if [[ "$url" == *"paloaltonetworks.com"* ]]; then
+                echo "❌ This 'url' should not contain $url as it appears to be a tenant URL."    
                 exit 1
-                fi
+            else
+                echo "✅ Did not find 'paloaltonetworks.com' in this URL."
+            fi
+            done
             done
