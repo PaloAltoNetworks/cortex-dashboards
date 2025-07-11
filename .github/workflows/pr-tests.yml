@@ -159,9 +159,9 @@ jobs:
                 if [[ "$description" == "" || "$description" == "null" ]]; then
                     echo "❌ Missing description in widget or dashboard."
                     exit 1
-                    echo "✅ Description: $description found in widget or dashboard."
+                    
                 else
-
+                    echo "✅ Description: $description found in widget or dashboard."
                 fi
                 done
-            done            
+            done
