@@ -102,7 +102,7 @@
                 "viewOptions": { "type": "table", "commands": [] },
                 "drilldown_config": {
                   "actionData": {
-                    "url": "https://x.x.paloaltonetworks.com/assets/inventory/compute/container-image?id=$row.asset_id&assetId=$row.asset_id",
+                    "url": "https://placeholder.com/assets/inventory/compute/container-image?id=$row.asset_id&assetId=$row.asset_id",
                     "openInNewTab": true
                   },
                   "actionType": "open_custom_url"
@@ -353,7 +353,7 @@
                 "viewOptions": { "type": "table", "commands": [] },
                 "drilldown_config": {
                   "actionData": {
-                    "url": "https://placeholder.com/assets/inventory?id=$row.asset_id&assetId=$row.asset_id",
+                    "url": "https://paloaltonetworks.com/assets/inventory?id=$row.asset_id&assetId=$row.asset_id",
                     "openInNewTab": true
                   },
                   "actionType": "open_custom_url"
@@ -425,7 +425,7 @@
         "query_tables": ["asset_inventory"],
         "query_uses_library": false
       },
-      "creator_mail": "test@test.com"
+      "creator_mail": ""
     },
     {
       "widget_key": "xql_1751826024368",
