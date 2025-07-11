@@ -108,10 +108,10 @@ jobs:
                 echo "---"
                 echo "Checking file: $file for 'placeholder.com' URL"
 
-                if jq -e '([.. | .url? | select(. == *"placeholder.com"* )] | length) == 0' "$file"; then
+                if jq -e '([.. | .url? | select(contains("placeholder.com")?)] | length) > 0' "$file"; then
                     echo "✅ Found 'placeholder.com' in this URL."
                 else
-                    echo "❌ URL found missing 'placeholder.com'."
+                    echo "❌ URL missing 'placeholder.com'"
                     exit 1
                 fi
             done
