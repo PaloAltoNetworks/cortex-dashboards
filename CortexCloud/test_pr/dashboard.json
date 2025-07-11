@@ -401,7 +401,7 @@
         "query_tables": ["uvm_findings"],
         "query_uses_library": false
       },
-      "creator_mail": "test@test.com"
+      "creator_mail": ""
     },
     {
       "widget_key": "xql_1751480113824",
