@@ -18,26 +18,27 @@ jobs:
         run: |
             base_sha=${{ github.event.pull_request.base.sha }}
             head_sha=${{ github.event.pull_request.head.sha }}
-            echo "nothingToScan=false" >> $GITHUB_OUTPUT
 
             echo "Comparing base commit $base_sha with head commit $head_sha"
 
             # Get a list of changed JSON files. The `|| true` ensures this line doesn't fail the script if no .json files are found.
-            json_files=$(git diff --name-only $base_sha $head_sha | grep '.json$' || true)
+            changed_files=$(git diff --name-only $base_sha $head_sha | grep '.json$' || true)
 
-            echo "Changed JSON files: $json_files"
+            echo "json_files<<EOF" >> $GITHUB_OUTPUT
+            echo "$changed_files" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
 
             # Check if the result is empty. If so, it's a success.
             if [ -z "$json_files" ]; then
                 echo "No JSON files were changed in this PR. ✅"
-                echo "nothingToScan=true" >> $GITHUB_OUTPUT
                 exit 0
             fi
 
       - name: Check for email address in JSON files
-        if: steps.check-json-files.outputs.nothingToScan != 'true'
+        if: steps.check-json-files.outputs.json_files != ''
         run: |
             echo "Checking the following JSON files:"
+            json_files=$(echo ${{ steps.check-json-files.outputs.json_files }})
             echo "$json_files"
 
             for file in $json_files; do
@@ -61,9 +62,11 @@ jobs:
             echo "All checks passed for all JSON files. 🎉"
 
       - name: Check for tenant URL in JSON files
-        if: steps.check-json-files.outputs.nothingToScan != 'true'
+        if: steps.check-json-files.outputs.json_files != ''
         run: |
             echo "Checking the following JSON files:"
+
+            json_files=$(echo ${{ steps.check-json-files.outputs.json_files }})
             echo "$json_files"
 
             for file in $json_files; do
