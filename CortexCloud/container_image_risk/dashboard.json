@@ -295,7 +295,7 @@
                 },
                 "drilldown_config": {
                   "actionData": {
-                    "url": "https://placeholder.com/assets/inventory/compute/container-image",
+                    "url": "https://placehold.com/assets/inventory/compute/container-image",
                     "openInNewTab": true
                   },
                   "actionType": "open_custom_url"

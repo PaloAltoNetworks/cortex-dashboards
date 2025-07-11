@@ -2,7 +2,7 @@
   "dashboards_data": [
     {
       "name": "SecOps Dashboard",
-      "description": null,
+      "description": "",
       "status": "ENABLED",
       "layout": [
         {
