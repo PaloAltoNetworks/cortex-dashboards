@@ -91,9 +91,9 @@ jobs:
                 echo "---"
                 echo "Checking file: $file for 'description'"
                 if jq -e '([.. | .description? | select(. == null or . == "")] | length) == 0' "$file"; then
-                    echo "✅ All descriptions in $file are valid."
-                else
                     echo "❌ A description in $file is missing or empty."
                     exit 1
+                else
+                    echo "✅ All descriptions in $file are valid."
                 fi
             done
