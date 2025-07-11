@@ -1,117 +1,140 @@
 {
-  "dashboards_data": [
-    {
-      "name": "SecOps Dashboard",
-      "description": null,
-      "status": "ENABLED",
-      "layout": [
-        {
-          "id": "row-9962",
-          "data": [
-            {
-              "key": "secopsMttr",
-              "data": {
-                "type": "Timeline",
-                "width": 100,
-                "height": 361,
-                "time_frame": { "relativeTime": 604800000 }
-              }
-            }
-          ]
-        },
-        {
-          "id": "row-1",
-          "data": [
-            {
-              "key": "secopsOpenActionPlans",
-              "data": {
-                "width": 33.31090174966353,
-                "height": 379,
-                "time_frame": { "relativeTime": 2592000000 }
-              }
-            },
-            {
-              "key": "secopsActionPlansByAge",
-              "data": { "width": 39.97308209959623, "height": 379 }
-            },
-            {
-              "key": "secopsSnapshot",
-              "data": {
-                "width": 20.087483176312247,
-                "height": 379,
-                "time_frame": { "relativeTime": 604800000 }
-              }
-            }
-          ]
-        },
-        {
-          "id": "row-2",
-          "data": [
-            {
-              "key": "secopsActionPlansByType",
-              "data": {
-                "type": "Dividers",
-                "width": 19.81830417227456,
-                "height": 644
-              }
-            },
-            {
-              "key": "effectiveVulnerabilitiesDistribution",
-              "data": { "width": 58.209959623149395, "height": 644 }
-            },
-            {
-              "key": "topIdentitiesAtRisk",
-              "data": { "width": 21.971736204576043, "height": 644 }
-            }
-          ]
-        },
-        {
-          "id": "row-8546",
-          "data": [
-            {
-              "key": "topIdentityIssues",
-              "data": { "width": 50, "height": 633 }
-            },
-            {
-              "key": "iamOverPrivileged",
-              "data": { "width": 50, "height": 633 }
-            }
-          ]
-        },
-        {
-          "id": "row-3",
-          "data": [
-            {
-              "key": "topClustersByVulnerabilities",
-              "data": {
-                "type": "Table",
-                "width": 33.333333333333336,
-                "height": 400
-              }
-            },
-            {
-              "key": "secopsTopImpactedAssets",
-              "data": {
-                "type": "Dividers",
-                "width": 33.333333333333336,
-                "height": 400
-              }
-            },
-            {
-              "key": "secopsTopImpactedAccounts",
-              "data": {
-                "type": "Dividers",
-                "width": 33.333333333333336,
-                "height": 400
-              }
-            }
-          ]
-        }
-      ],
-      "default_dashboard_id": 40,
-      "global_id": "c67e032266884df99dd570906935c1ed",
-      "metadata": { "params": [] }
-    }
-  ],
-  "widgets_data": []
+"dashboards_data": [
+{
+"name": "Cloud SecOps",
+"description": null,
+"status": "ENABLED",
+"layout": [
+{
+"id": "row-9962",
+"data": [
+{
+"key": "incidentsBySeverity",
+"data": {
+"type": "Dividers",
+"width": 30.04889056036104,
+"height": 333
+}
+},
+{
+"key": "secopsMttr",
+"data": {
+"type": "Timeline",
+"width": 69.9887175629936,
+"height": 333,
+"time_frame": {
+"relativeTime": 604800000
+}
+}
+}
+]
+},
+{
+"id": "row-5905",
+"data": [
+{
+"key": "incidentsStatusBoard",
+"data": {
+"type": "Bar",
+"width": 30,
+"height": 412,
+"time_frame": {
+"relativeTime": 2592000000
+}
+}
+},
+{
+"key": "secopsActionPlansByType",
+"data": {
+"type": "Dividers",
+"width": 30,
+"height": 412
+}
+},
+{
+"key": "secopsActionPlansByAge",
+"data": {
+"width": 40,
+"height": 412
+}
+}
+]
+},
+{
+"id": "row-2",
+"data": [
+{
+"key": "newestIncidents",
+"data": {
+"type": "Table",
+"width": 50,
+"height": 412
+}
+},
+{
+"key": "effectiveVulnerabilitiesDistribution",
+"data": {
+"width": 50,
+"height": 412
+}
+}
+]
+},
+{
+"id": "row-8546",
+"data": [
+{
+"key": "topIdentityIssues",
+"data": {
+"width": 33.333333333333336,
+"height": 633
+}
+},
+{
+"key": "topIdentitiesAtRisk",
+"data": {
+"width": 24.783753290710795,
+"height": 633
+}
+},
+{
+"key": "assetsByCategory",
+"data": {
+"type": "Pie",
+"width": 41.857841293719446,
+"height": 633
+}
+}
+]
+},
+{
+"id": "row-3",
+"data": [
+{
+"key": "topClustersByVulnerabilities",
+"data": {
+"type": "Table",
+"width": 50,
+"height": 400
+}
+},
+{
+"key": "secopsTopImpactedAssets",
+"data": {
+"type": "Dividers",
+"width": 50,
+"height": 400
+}
+}
+]
+}
+],
+"default_dashboard_id": 40,
+"global_id": "c67e032266884df99dd570906935c1ed",
+"metadata": {
+"params": []
+}
+}
+],
+"widgets_data": []
 }
