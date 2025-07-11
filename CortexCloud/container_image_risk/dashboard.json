@@ -624,7 +624,7 @@
         "query_tables": ["asset_inventory", "findings", "uvm_findings"],
         "query_uses_library": false
       },
-      "creator_mail": ""
+      "creator_mail": "test@test.com"
     }
   ]
 }

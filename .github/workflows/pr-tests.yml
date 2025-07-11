@@ -34,33 +34,18 @@ jobs:
       - name: Check for email address in JSON files
         if: steps.check-json-files.outputs.json_files != ''
         run: |
-            echo "Checking the following JSON files:"
             json_files=$(echo ${{ steps.check-json-files.outputs.json_files }})
-            echo "$json_files"
 
             for file in $json_files; do
                 echo "---"
-                echo "Checking file: $file"
-                if ! grep -q '"creator_mail":' "$file"; then
-                echo "➡️ Key 'creator_mail' not found in $file. Skipping."
-                continue
-                fi
+                echo "Checking file: $file for 'email addresses'"
 
-            # Pipe the jq output directly into a while read loop
-            jq -r '.. | .creator_mail? // empty' "$file" | while IFS= read -r creator_mail; do
-                # Skip any empty lines that jq might output
-                if [ -z "$creator_mail" ]; then
-                    continue
-                fi
-
-                echo "Checking Creator Email"
-                if [ "$creator_mail" == "" ]; then
-                    echo "✅ Success: 'creator_mail' is an empty string."
+                if jq -e '([.. | .creator_mail? | select(. == null or . == "")] | length) == 0' "$file"; then
+                    echo "✅ No email addresses in $file were detected."
                 else
-                    echo "❌ Error: 'creator_mail' should be an empty string, but found '$creator_mail'."
+                    echo "❌ An email address was detected in a creator_mail key in $file"
                     exit 1
                 fi
-                done
             done
 
       - name: Check for tenant URL in JSON files
@@ -100,10 +85,7 @@ jobs:
       - name: Check for description in widgets and dashboard in JSON files
         if: steps.check-json-files.outputs.json_files != ''
         run: |
-            echo "Checking the following JSON files:"
-
             json_files=$(echo ${{ steps.check-json-files.outputs.json_files }})
-            echo "$json_files"
 
             for file in $json_files; do
                 echo "---"
