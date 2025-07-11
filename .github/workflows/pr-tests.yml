@@ -49,13 +49,21 @@ jobs:
                 continue
                 fi
 
-                creator_mail_value=$(jq -r '.. | .creator_mail? // empty' "$file")
-                if [[ "$creator_mail_value" == "" || "$creator_mail_value" == "null" ]]; then
+            # Pipe the jq output directly into a while read loop
+            jq -r '.. | .creator_mail? // empty' "$file" | while IFS= read -r creator_mail_value; do
+                # Skip any empty lines that jq might output
+                if [ -z "$creator_mail_value" ]; then
+                    continue
+                fi
+
+                echo "Checking URL"
+                if [ "$creator_mail_value" == "" ]; then
                     echo "✅ Success: 'creator_mail' is an empty string."
                 else
                     echo "❌ Error: 'creator_mail' should be an empty string, but found '$creator_mail_value'."
-                exit 1
+                    exit 1
                 fi
+                done
             done
 
             echo "---"
@@ -79,18 +87,17 @@ jobs:
 
             # Pipe the jq output directly into a while read loop
             jq -r '.. | .url? // empty' "$file" | while IFS= read -r url; do
-      
-            # Skip any empty lines that jq might output
-            if [ -z "$url" ]; then
-                continue
-            fi
+                # Skip any empty lines that jq might output
+                if [ -z "$url" ]; then
+                    continue
+                fi
 
-            echo "Checking URL: $url"
-            if [[ "$url" == *"paloaltonetworks.com"* ]]; then
-                echo "❌ This 'url' should not contain $url as it appears to be a tenant URL."    
-                exit 1
-            else
-                echo "✅ Did not find 'paloaltonetworks.com' in this URL."
-            fi
-            done
+                echo "Checking URL"
+                if [[ "$url" == *"paloaltonetworks.com"* ]]; then
+                    echo "❌ This 'url' should not contain $url as it appears to be a tenant URL."    
+                    exit 1
+                else
+                    echo "✅ Did not find 'paloaltonetworks.com' in this URL."
+                fi
+                done
             done
