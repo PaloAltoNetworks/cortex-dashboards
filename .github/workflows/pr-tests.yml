@@ -50,17 +50,17 @@ jobs:
                 fi
 
             # Pipe the jq output directly into a while read loop
-            jq -r '.. | .creator_mail? // empty' "$file" | while IFS= read -r creator_mail_value; do
+            jq -r '.. | .creator_mail? // empty' "$file" | while IFS= read -r creator_mail; do
                 # Skip any empty lines that jq might output
-                if [ -z "$creator_mail_value" ]; then
+                if [ -z "$creator_mail" ]; then
                     continue
                 fi
 
                 echo "Checking URL"
-                if [ "$creator_mail_value" == "" ]; then
+                if [ "$creator_mail" == "" ]; then
                     echo "✅ Success: 'creator_mail' is an empty string."
                 else
-                    echo "❌ Error: 'creator_mail' should be an empty string, but found '$creator_mail_value'."
+                    echo "❌ Error: 'creator_mail' should be an empty string, but found '$creator_mail'."
                     exit 1
                 fi
                 done
