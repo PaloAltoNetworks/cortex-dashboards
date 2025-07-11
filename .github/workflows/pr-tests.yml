@@ -7,11 +7,11 @@ on:
 jobs:
   test-json:
     runs-on: ubuntu-latest
+    env:
+        GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        env:
-            GH_TOKEN: ${{ github.token }}
         with:
             fetch-depth: 0
 
