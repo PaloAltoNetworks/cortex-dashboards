@@ -28,14 +28,14 @@ jobs:
             # Check if the result is empty. If so, it's a success.
             if [ -z "$json_files" ]; then
                 echo "No JSON files were changed in this PR. ✅"
-                echo "nothingToScan=true" >> $GITHUB_OUTPUT
+                nothingToScan=true
+                echo $nothingToScan >> $GITHUB_OUTPUT
                 exit 0
             fi
 
       - name: Check for email address in JSON files
         if: ${{ env.nothingToScan != 'true' }}
         run: |
-            # If we get here, files were found. Now loop and check them.
             echo "Checking the following JSON files:"
             echo "$json_files"
 
