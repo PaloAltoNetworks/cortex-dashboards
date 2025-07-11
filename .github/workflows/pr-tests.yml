@@ -13,24 +13,27 @@ jobs:
         with:
             fetch-depth: 0
 
-      - name: Find and check creator_mail
+      - name: Check for any changed JSON files
         run: |
             base_sha=${{ github.event.pull_request.base.sha }}
             head_sha=${{ github.event.pull_request.head.sha }}
+            nothingToScan=false
+            echo "nothingToScan=false" >> $GITHUB_OUTPUT
 
             echo "Comparing base commit $base_sha with head commit $head_sha"
 
-            # Get a list of changed JSON files. The `|| true` ensures this line
-            # doesn't fail the script if no .json files are found.
+            # Get a list of changed JSON files. The `|| true` ensures this line doesn't fail the script if no .json files are found.
             json_files=$(git diff --name-only $base_sha $head_sha | grep '.json$' || true)
 
             # Check if the result is empty. If so, it's a success.
             if [ -z "$json_files" ]; then
                 echo "No JSON files were changed in this PR. ✅"
-                exit 0 # Explicitly exit with a success code
+                echo "nothingToScan=true" >> $GITHUB_OUTPUT
+                exit 0
             fi
 
       - name: Check for email address in JSON files
+        if: ${{ env.nothingToScan != 'true' }}
         run: |
             # If we get here, files were found. Now loop and check them.
             echo "Checking the following JSON files:"
@@ -46,9 +49,9 @@ jobs:
 
                 creator_mail_value=$(jq -r '.creator_mail' "$file")
                 if [ "$creator_mail_value" == "" ]; then
-                echo "✅ Success: 'creator_mail' is an empty string."
+                    echo "✅ Success: 'creator_mail' is an empty string."
                 else
-                echo "❌ Error: 'creator_mail' should be an empty string, but found '$creator_mail_value'."
+                    echo "❌ Error: 'creator_mail' should be an empty string, but found '$creator_mail_value'."
                 exit 1
                 fi
             done
