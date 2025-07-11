@@ -425,7 +425,7 @@
         "query_tables": ["asset_inventory"],
         "query_uses_library": false
       },
-      "creator_mail": ""
+      "creator_mail": "test@test.com"
     },
     {
       "widget_key": "xql_1751826024368",
