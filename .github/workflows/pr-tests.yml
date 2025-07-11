@@ -131,3 +131,37 @@ jobs:
                 fi
                 done
             done
+
+      - name: Check for description in widgets and dashboard in JSON files
+        if: steps.check-json-files.outputs.json_files != ''
+        run: |
+            echo "Checking the following JSON files:"
+
+            json_files=$(echo ${{ steps.check-json-files.outputs.json_files }})
+            echo "$json_files"
+
+            for file in $json_files; do
+                echo "---"
+                echo "Checking file: $file"
+                if ! grep -q '"description":' "$file"; then
+                echo "➡️ Key 'description' not found in $file. Skipping."
+                continue
+                fi
+
+            # Pipe the jq output directly into a while read loop
+            jq -r '.. | .description? // empty' "$file" | while IFS= read -r url; do
+                # Skip any empty lines that jq might output
+                if [ -z "$description" ]; then
+                    continue
+                fi
+
+                echo "Checking URL"
+                if [ "$description" == "" ]; then
+                    echo "❌ Missing description in widget or dashboard."
+                    exit 1
+                    echo "✅ Description: $description found in widget or dashboard."
+                else
+
+                fi
+                done
+            done            
