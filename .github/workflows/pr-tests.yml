@@ -56,7 +56,7 @@ jobs:
                     continue
                 fi
 
-                echo "Checking URL"
+                echo "Checking Creator Email"
                 if [ "$creator_mail" == "" ]; then
                     echo "✅ Success: 'creator_mail' is an empty string."
                 else

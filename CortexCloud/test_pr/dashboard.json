@@ -505,7 +505,7 @@
         "query_tables": ["uvm_findings", "findings", "asset_inventory"],
         "query_uses_library": false
       },
-      "creator_mail": ""
+      "creator_mail": "bob@bob.com"
     },
     {
       "widget_key": "xql_1751912615687",
