@@ -2,7 +2,7 @@
 "dashboards_data": [
 {
 "name": "Cloud SecOps",
-"description": null,
+"description": "Cloud Security Operations Dashboard",
 "status": "ENABLED",
 "layout": [
 {
