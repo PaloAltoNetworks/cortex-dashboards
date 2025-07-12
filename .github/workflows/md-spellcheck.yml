@@ -1,6 +1,7 @@
 name: Spellcheck Markdown
 on:
   pull_request:
+    branches: [ main ]
     paths:
       - '**.md'
 

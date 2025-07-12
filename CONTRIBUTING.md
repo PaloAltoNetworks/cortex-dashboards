@@ -1,6 +1,6 @@
 # Contributing Guidelines
 
-In order to maintain the quality and consistency of the dashboards, we have established the following guidelines.
+In order to maintain the quality and consistency of the dashboards, we have established the following guidelines. 
 
 - [Getting Started](#getting-started)
 - [Required Steps](#required-steps)
