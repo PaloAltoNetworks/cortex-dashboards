@@ -1,0 +1,9 @@
+JSON
+Readme
+README
+md
+XQL
+Cortex
+Palo
+Drilldown
+png
