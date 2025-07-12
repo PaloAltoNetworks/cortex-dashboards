@@ -6,14 +6,10 @@ on:
       - '**.md'
 
 jobs:
-  build:
-    name: Spellcheck
+  spellcheck:
     runs-on: ubuntu-latest
     steps:
-    # The checkout step
-    - uses: actions/checkout@v4
-    - uses: rojopolis/spellcheck-github-actions@v0
-      name: Spellcheck
-      with:
-        source_files: '**/*.md'
-        task_name: Spelllcheck_MD
+      - uses: actions/checkout@v4
+      - uses: matheus23/md-spellcheck-action@v4.2.2
+        with:
+          files-to-check: "**.md"
