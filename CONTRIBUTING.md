@@ -63,7 +63,7 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 - Edit the README.md file and replace the placeholders with the appropriate information
 
 > [!NOTE]
-> If your dasboard doesn't need any modifications just set the Requirements section to None and remove the existing markdown
+> If your dashboard doesn't need any modifications just set the Requirements section to None and remove the existing markdown
 
 - Make sure your folder contains only these 3 files:
     - README.md
@@ -120,7 +120,7 @@ dataset = asset_inventory
 
 Joins by their nature tend to be complex and difficult to read. To make it easier to read and edit your joins, always start the line before the join with an empty comment //
 
-Joins should also be split apart where after specifying the joined dataset you line break, issue your filter, fields, etc., and then specify the "as joinname" on the final line and finish with another line break.
+Joins should also be split apart where after specifying the joined dataset you line break, issue your filter, fields, etc., and then specify the "as join name" on the final line and finish with another line break.
 
 ---
 
@@ -157,7 +157,7 @@ dataset = asset_inventory
 
 Try to document your XQL with comments. This will help others understand what your query is doing and why. This is especially important when you are working on a query that is complex or has a lot of joins.
 
-Addiotionally, if there are parts of a query where you want to add functionality (filtering out certain items, etc.), but you don't want to add it by default, leave the command in, but commented out. For these scenarios follow the same advice as above with an empty comment above and below the code.
+Additionally, if there are parts of a query where you want to add functionality (filtering out certain items, etc.), but you don't want to add it by default, leave the command in, but commented out. For these scenarios follow the same advice as above with an empty comment above and below the code.
 
 Example:
 ```js
@@ -263,6 +263,6 @@ My dashboard details and description.
 
 Of course it is totally optional, but it's always good to let people know :mega: the hard work you do :muscle:! 
 
-If you are so inlined, please ddd your name and/or country flag to the parent directory of your dashboard.
+If you are so inclined, please add your name and/or country flag to the parent directory of your dashboard.
 
 [Country Flag Markdown Icons](https://github.com/ikatyang/emoji-cheat-sheet/blob/master/README.md#flags)

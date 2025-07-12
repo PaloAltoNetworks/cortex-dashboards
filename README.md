@@ -1,6 +1,6 @@
 # Cortex Dashboards
 
-This repository serves as a collection of customized and sharable dashboards for the Palo Alto Networks Cortex platform. It provides a centralized location to find, share, and contribute valuable dashboard configurations to enhance your security operations.
+This repository serves as a collection of customized and shareable dashboards for the Palo Alto Networks Cortex platform. It provides a centralized location to find, share, and contribute valuable dashboard configurations to enhance your security operations.
 
 - [Dashboards](#dashboards)
 - [Importing a Dashboard](#importing-a-dashboard)
