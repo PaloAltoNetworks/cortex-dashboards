@@ -5,7 +5,7 @@ on:
     branches: [ main ] 
 
 jobs:
-  test-json:
+  dashboard-tests:
     runs-on: ubuntu-latest
     env:
         GH_TOKEN: ${{ github.token }}
@@ -97,3 +97,13 @@ jobs:
                     echo "✅ All descriptions in $file are valid."
                 fi
             done
+
+  spellcheck:
+    needs: [dashboard-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: matheus23/md-spellcheck-action@v4.2.2
+        with:
+          files-to-check: "**.md"
+          words-to-ignore-file: "config/spellcheck-ignore.txt"
