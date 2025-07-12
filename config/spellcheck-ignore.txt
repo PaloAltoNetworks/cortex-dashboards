@@ -1,4 +1,5 @@
 JSON
+json
 Readme
 README
 md
@@ -10,3 +11,4 @@ Drilldowns
 drilldown
 drilldowns
 png
+formatter

@@ -1,6 +1,6 @@
 # Contributing Guidelines
 
-In order to maintain the quality and consistency of the dashboards, we have established the following guidelines. 
+In order to maintain the quality and consistency of the dashboards, we have established the following guidelines.
 
 - [Getting Started](#getting-started)
 - [Required Steps](#required-steps)
@@ -37,7 +37,7 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 > [!TIP]
 > Using a code formatter like [Prettier](https://prettier.io/) makes it easier to read and edit the JSON file
 
-- Scrub your exported dashboard JSON file of any sensitive information (drilldowns using internal or tenant URL's, email addresses, etc.) before committing it.
+- Scrub your exported dashboard JSON file of any sensitive information (drilldowns using internal or tenant URLs, email addresses, etc.) before committing it.
 
 > [!WARNING]
 > If you have drilldowns that reference the URL of your tenant replace the tenant URL with: placeholder.com
@@ -47,10 +47,10 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 
 ---
 ### Create a Dashboard Screenshot
-- Take a screen shot of your dashbord and name it dashboard.png
+- Take a screen shot of your dashboard and name it dashboard.png
 
 > [!NOTE] 
-> Ensure that the screenshot of your dashboard captures only the dashbord and not the entire browser window. It is recommended to collapse the left sidebar to maximize the dashboard.
+> Ensure that the screenshot of your dashboard captures only the dashboard and not the entire browser window. It is recommended to collapse the left sidebar to maximize the dashboard.
 
 > [!TIP]
 > For large dashboards with lots of widgets and information use your browser zoom to increase the size of what is captured in the screenshot.
@@ -73,10 +73,10 @@ To add a new dashboard start by [forking the repository](https://docs.github.com
 ---
 ### Edit Directory Readme
 
-In the parent folder where your dashboadard is located, there is a directory listing of all the dashboards in that hierarchy. Fill in the required fields for your dashboard and insert it alphabetically. Your dashboard position in the table can be easily identified by looking at the folder structure as they are sorted alphabetically by default.
+In the parent folder where your dashboard is located, there is a directory listing of all the dashboards in that hierarchy. Fill in the required fields for your dashboard and insert it alphabetically. Your dashboard position in the table can be easily identified by looking at the folder structure as they are sorted alphabetically by default.
 
 Example:
- | Dashboard Title |  Description  | Requires Updating URL's  | Contributor | Contributor Country |
+ | Dashboard Title |  Description  | Requires Updating URLs  | Contributor | Contributor Country |
  |---|---|---|---|---|
  | [Your Dashboard Name](your_folder_path/) | Your dashboard description. | [No | [Optional](#optional-steps)  | [Optional](#optional-steps) |
 
@@ -90,7 +90,7 @@ Copy/Paste:
 
 ## XQL Formatting
 
-In order to maintain consistency across dashboards we have established the following guidelines for formatting your XQL queries. Although some of these tasks may seem duplicative and mundane, it is important to understand not everyone who will be using these queries has the same level of experience. Because of this code readability and in-code comments are important.
+In order to maintain consistency across dashboards we have established the following guidelines for formatting your XQL queries. Although some of these tasks may seem redundant and mundane, it is important to understand not everyone who will be using these queries has the same level of experience. Because of this code readability and in-code comments are important.
 
 ---
 
