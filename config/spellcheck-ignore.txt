@@ -6,4 +6,7 @@ XQL
 Cortex
 Palo
 Drilldown
+Drilldowns
+drilldown
+drilldowns
 png
