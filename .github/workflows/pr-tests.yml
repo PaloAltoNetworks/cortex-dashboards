@@ -42,6 +42,7 @@ jobs:
 
                 if jq -e '([.. | .creator_mail? | select(. != null or . != "")] | length) == 0' "$file"; then
                     echo "❌ A non-null or non-empty string value was detected in a creator_mail key in $file"
+                    echo "Refer to the Contributing Guidelines here: https://github.com/PaloAltoNetworks/cortex-dashboards/blob/main/CONTRIBUTING.md#format-dashboard-json"
                     exit 1
                 else
                     echo "✅ No email addresses in $file were detected."
@@ -61,6 +62,7 @@ jobs:
                     echo "✅ All URLs in $file are valid."
                 else
                     echo "❌ A URL was found in $file that appears to be a tenant URL."
+                    echo "Refer to the Contributing Guidelines here: https://github.com/PaloAltoNetworks/cortex-dashboards/blob/main/CONTRIBUTING.md#format-dashboard-json"
                     exit 1
                 fi
             done
@@ -78,6 +80,7 @@ jobs:
                     echo "✅ All URLs in $file are valid."
                 else
                     echo "❌ An invalid URL (that does not contain 'placeholder.com') was found in $file."
+                    echo "Refer to the Contributing Guidelines here: https://github.com/PaloAltoNetworks/cortex-dashboards/blob/main/CONTRIBUTING.md#format-dashboard-json"
                     exit 1
                 fi
             done
@@ -92,6 +95,7 @@ jobs:
                 echo "Checking file: $file for 'description'"
                 if jq -e '([.. | .description? | select(. == null or . == "")] | length) == 0' "$file"; then
                     echo "❌ A description in $file is missing or empty."
+                    echo "Refer to the Contributing Guidelines here: https://github.com/PaloAltoNetworks/cortex-dashboards/blob/main/CONTRIBUTING.md#widget-documentation"
                     exit 1
                 else
                     echo "✅ All descriptions in $file are valid."

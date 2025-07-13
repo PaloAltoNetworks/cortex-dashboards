@@ -11,7 +11,7 @@ This repository serves as a collection of customized and shareable dashboards fo
 
 ## Dashboards
 
-[Cortex Cloud](CortexCloud/)
+[Cortex Cloud](Dashboards/CortexCloud/)
 
 -----
 

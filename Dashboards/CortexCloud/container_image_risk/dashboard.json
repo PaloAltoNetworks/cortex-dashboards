@@ -325,7 +325,7 @@
                 "viewOptions": { "type": "table", "commands": [] },
                 "drilldown_config": {
                   "actionData": {
-                    "url": "https://placeholder.com/exposure-management/vulnerability-issues?cveId=$row.cve&assetId=$row.asset_id",
+                    "url": "https://test.placeholder.com/exposure-management/vulnerability-issues?cveId=$row.cve&assetId=$row.asset_id",
                     "openInNewTab": true
                   },
                   "actionType": "open_custom_url"
@@ -431,7 +431,7 @@
         "query_tables": ["asset_inventory"],
         "query_uses_library": false
       },
-      "creator_mail": ""
+      "creator_mail": "test@test.com"
     },
     {
       "widget_key": "xql_1751826024368",
