@@ -40,7 +40,7 @@ jobs:
                 echo "---"
                 echo "Checking file: $file for 'email addresses'"
 
-                if jq -e '([.. | .creator_mail? | select(. != null or . != "")] | length) == 0' "$file"; then
+                if jq -e '([.. | .creator_mail? | select(. != "")] | length) == 0' "$file"; then
                     echo "❌ A non-null or non-empty string value was detected in a creator_mail key in $file"
                     echo "Refer to the Contributing Guidelines here: https://github.com/PaloAltoNetworks/cortex-dashboards/blob/main/CONTRIBUTING.md#format-dashboard-json"
                     exit 1
@@ -76,7 +76,7 @@ jobs:
                 echo "---"
                 echo "Checking file: $file for 'placeholder.com' URL"
 
-                if jq -e '([.. | .url? | select(. != null and (contains("placeholder.com") | not))] | length) == 0' "$file"; then
+                if jq -e '([.. | .url? | select(. != null and (startswith("https://placeholder.com") | not))] | length) == 0' "$file"; then
                     echo "✅ All URLs in $file are valid."
                 else
                     echo "❌ An invalid URL (that does not contain 'placeholder.com') was found in $file."
