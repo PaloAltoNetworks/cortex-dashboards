@@ -325,7 +325,7 @@
                 "viewOptions": { "type": "table", "commands": [] },
                 "drilldown_config": {
                   "actionData": {
-                    "url": "https://test.placeholder.com/exposure-management/vulnerability-issues?cveId=$row.cve&assetId=$row.asset_id",
+                    "url": "https://test2.placeholder.com/exposure-management/vulnerability-issues?cveId=$row.cve&assetId=$row.asset_id",
                     "openInNewTab": true
                   },
                   "actionType": "open_custom_url"
