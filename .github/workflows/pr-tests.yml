@@ -40,7 +40,7 @@ jobs:
                 echo "---"
                 echo "Checking file: $file for 'email addresses'"
 
-                if jq -e '(any(.. | .creator_mail?; . == null or . == "")) | not' "$file"; then
+                if jq -e '(any(.. | .creator_mail?; type == "string" and . != "")) | not' "$file"; then
                     echo "✅ No email addresses in $file were detected."
                 else
                     echo "❌ A non-empty string value was detected in a creator_mail key in $file"
