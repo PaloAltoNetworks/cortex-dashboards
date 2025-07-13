@@ -2,7 +2,7 @@
   "dashboards_data": [
     {
       "name": "Container Images and Daily Risk",
-      "description": "Container images detected over time, daily risk, and high-impact low-effort patch recommendations.",
+      "description": "",
       "status": "ENABLED",
       "layout": [
         {
@@ -431,7 +431,7 @@
         "query_tables": ["asset_inventory"],
         "query_uses_library": false
       },
-      "creator_mail": "test@test.com"
+      "creator_mail": ""
     },
     {
       "widget_key": "xql_1751826024368",
