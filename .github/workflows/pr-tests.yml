@@ -40,12 +40,12 @@ jobs:
                 echo "---"
                 echo "Checking file: $file for 'email addresses'"
 
-                if jq -e '([.. | .creator_mail? | select(. != null or . != "")] | length) == 0' "$file"; then
+                if jq -e '(any(.. | .creator_mail?; . == null or . == "")) | not' "$file"; then
+                    echo "✅ No email addresses in $file were detected."
+                else
                     echo "❌ A non-empty string value was detected in a creator_mail key in $file"
                     echo "Refer to the Contributing Guidelines here: https://github.com/PaloAltoNetworks/cortex-dashboards/blob/main/CONTRIBUTING.md#format-dashboard-json"
                     exit 1
-                else
-                    echo "✅ No email addresses in $file were detected."
                 fi
             done
 
