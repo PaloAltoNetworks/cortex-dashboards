@@ -93,12 +93,12 @@ jobs:
             for file in $json_files; do
                 echo "---"
                 echo "Checking file: $file for 'description'"
-                if jq -e '(any(.. | .description?; type == "string" and . != "")) | not' "$file"; then
+                if jq -e '(any(.. | .description?; type == "string" and . == "")) | not' "$file"; then
+                    echo "✅ All descriptions in $file are valid."
+                else
                     echo "❌ A description in $file is missing or empty."
                     echo "Refer to the Contributing Guidelines here: https://github.com/PaloAltoNetworks/cortex-dashboards/blob/main/CONTRIBUTING.md#widget-documentation"
                     exit 1    
-                else
-                    echo "✅ All descriptions in $file are valid."
                 fi
             done
 
