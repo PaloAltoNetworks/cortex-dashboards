@@ -2,7 +2,7 @@
   "dashboards_data": [
     {
       "name": "Container Images and Daily Risk",
-      "description": "Container images detected over time, daily risk, and high-impact low-effort patch recommendations.",
+      "description": "",
       "status": "ENABLED",
       "layout": [
         {
