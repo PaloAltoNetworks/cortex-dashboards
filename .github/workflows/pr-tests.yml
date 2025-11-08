@@ -12,7 +12,7 @@ jobs:
         GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
         with:
             fetch-depth: 0
 
@@ -107,8 +107,8 @@ jobs:
     needs: [dashboard-tests]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: matheus23/md-spellcheck-action@v4.2.2
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - uses: matheus23/md-spellcheck-action@v86eb8632a6975c5324a537f6ffb9b881211e4cee # 4.2.2
         with:
           files-to-check: "**.md"
           words-to-ignore-file: "config/spellcheck-ignore.txt"
