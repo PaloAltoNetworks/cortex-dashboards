@@ -1,0 +1,513 @@
+{
+    "dashboards_data": [
+        {
+            "name": "Internet-exposed Issues",
+            "description": null,
+            "status": "ENABLED",
+            "layout": [
+                {
+                    "id": "row-5522",
+                    "data": [
+                        {
+                            "key": "xql_1756494593334",
+                            "data": {
+                                "type": "Custom XQL",
+                                "width": 50,
+                                "height": 356,
+                                "phrase": "dataset = issues \n| fields xdm.issue.name, xdm.issue.detection.method, xdm.issue.status.progress\n| filter xdm.issue.detection.method = \"CLOUD_NETWORK_ANALYZER\" or xdm.issue.name = \"Azure Storage Account default network access is set to 'Allow'\"\n| filter xdm.issue.status.progress != \"Resolved\"\n| comp count() as Assets by xdm.issue.name\n| sort desc Assets \n\n| view graph type = column subtype = stacked layout = horizontal xaxis = xdm.issue.name yaxis = xdm.issue.name,Assets seriescolor(\"Assets\",\"#15ae3f\") ",
+                                "time_frame": {
+                                    "relativeTime": 86400000
+                                },
+                                "viewOptions": {
+                                    "type": "column",
+                                    "commands": [
+                                        {
+                                            "command": {
+                                                "op": "=",
+                                                "name": "subtype",
+                                                "value": "stacked"
+                                            }
+                                        },
+                                        {
+                                            "command": {
+                                                "op": "=",
+                                                "name": "layout",
+                                                "value": "horizontal"
+                                            }
+                                        },
+                                        {
+                                            "command": {
+                                                "op": "=",
+                                                "name": "xaxis",
+                                                "value": "xdm.issue.name"
+                                            }
+                                        },
+                                        {
+                                            "command": {
+                                                "op": "=",
+                                                "name": "yaxis",
+                                                "value": "xdm.issue.name,Assets"
+                                            }
+                                        },
+                                        {
+                                            "func": {
+                                                "args": [
+                                                    "Assets",
+                                                    "#15ae3f"
+                                                ],
+                                                "name": "seriescolor"
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            "key": "xql_1756495202980",
+                            "data": {
+                                "type": "Custom XQL",
+                                "width": 50,
+                                "height": 356,
+                                "phrase": "dataset = issues \n| filter xdm.issue.domain = \"POSTURE\"\n| filter xdm.issue.detection.method = \"CLOUD_NETWORK_ANALYZER\" or xdm.issue.name = \"Azure Storage Account default network access is set to 'Allow'\"\n| filter xdm.issue.status.progress != \"RESOLVED\" // Only active issues\n| comp count() as Issues by xdm.issue.domain \n// Graph\n\n\n| view graph type = single subtype = standard yaxis = Issues scale_threshold(\"#37f032\") font = \"Arial\" headerfontsize = 40 ",
+                                "time_frame": {
+                                    "relativeTime": 86400000
+                                },
+                                "viewOptions": {
+                                    "type": "single",
+                                    "commands": [
+                                        {
+                                            "command": {
+                                                "op": "=",
+                                                "name": "subtype",
+                                                "value": "standard"
+                                            }
+                                        },
+                                        {
+                                            "command": {
+                                                "op": "=",
+                                                "name": "yaxis",
+                                                "value": "Issues"
+                                            }
+                                        },
+                                        {
+                                            "func": {
+                                                "args": [
+                                                    "#37f032"
+                                                ],
+                                                "name": "scale_threshold"
+                                            }
+                                        },
+                                        {
+                                            "command": {
+                                                "op": "=",
+                                                "name": "font",
+                                                "value": "\"Arial\""
+                                            }
+                                        },
+                                        {
+                                            "command": {
+                                                "op": "=",
+                                                "name": "headerfontsize",
+                                                "value": "40"
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "id": "row-5489",
+                    "data": [
+                        {
+                            "key": "xql_1756495047110",
+                            "data": {
+                                "type": "Custom XQL",
+                                "width": 100,
+                                "height": 479,
+                                "phrase": "dataset = asset_inventory\n| fields xdm.asset.id,xdm.asset.name\n| join (dataset = issues \n    | filter xdm.issue.detection.method = \"CLOUD_NETWORK_ANALYZER\" or xdm.issue.name = \"Azure Storage Account default network access is set to 'Allow'\"\n    | filter xdm.issue.status.progress != \"Resolved\"\n    | arrayexpand xdm.issue.asset_ids \n    | fields xdm.issue.asset_ids as issueassetids, xdm.issue.name as issuename, xdm.issue.detection.method as method\n) \nas issue xdm.asset.id = issue.issueassetids\n| fields _insert_time as Identified, xdm.asset.name as asset, issuename, _time as Last_Seen\n| sort desc Identified ",
+                                "entityType": "xql-widget-table-ee842062-d0e8-4a30-8ddf-281193bf8229",
+                                "time_frame": {
+                                    "relativeTime": 86400000
+                                },
+                                "viewOptions": {
+                                    "type": "table",
+                                    "commands": []
+                                },
+                                "drilldown_config": {
+                                    "actionData": {
+                                        "url": "https://placeholder.com/assets/inventory?name=$row.asset",
+                                        "openInNewTab": true
+                                    },
+                                    "actionType": "open_custom_url"
+                                },
+                                "gridRawStorageInfo": {
+                                    "sort": null,
+                                    "coldefs": {},
+                                    "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                                    "columnWidth": "\"stretch\""
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "id": "row-3462",
+                    "data": [
+                        {
+                            "key": "xql_1756495335652",
+                            "data": {
+                                "type": "Custom XQL",
+                                "width": 50,
+                                "height": 359,
+                                "phrase": "dataset = issues \n| filter xdm.issue.domain = \"POSTURE\"\n| filter xdm.issue.detection.method = \"CLOUD_NETWORK_ANALYZER\" or xdm.issue.name = \"Azure Storage Account default network access is set to 'Allow'\"\n| filter xdm.issue.status.progress != \"Resolved\"\n| fields _insert_time as issue_date \n| bin issue_date span = 1MO \n| comp count() as total_cna_issues by issue_date\n| alter month_num = arrayindex(split(to_string(issue_date), \"-\"), 1) \n//\n| sort asc month_num \n| alter formatted_time = format_timestamp(\"%b / %Y\", issue_date)\n//Graph\n\n\n\n\n| view graph type = line show_callouts = `true` show_callouts_names = `true` xaxis = formatted_time yaxis = total_cna_resolved_issues,total_cna_issues seriescolor(\"total_cna_issues\",\"#9501ec\") seriestitle(\"total_cna_issues\",\"Total Open Internet-exposed issues\") ",
+                                "time_frame": {
+                                    "relativeTime": 86400000
+                                },
+                                "viewOptions": {
+                                    "type": "line",
+                                    "commands": [
+                                        {
+                                            "command": {
+                                                "op": "=",
+                                                "name": "show_callouts",
+                                                "value": "true"
+                                            }
+                                        },
+                                        {
+                                            "command": {
+                                                "op": "=",
+                                                "name": "show_callouts_names",
+                                                "value": "true"
+                                            }
+                                        },
+                                        {
+                                            "command": {
+                                                "op": "=",
+                                                "name": "xaxis",
+                                                "value": "formatted_time"
+                                            }
+                                        },
+                                        {
+                                            "command": {
+                                                "op": "=",
+                                                "name": "yaxis",
+                                                "value": "total_cna_resolved_issues,total_cna_issues"
+                                            }
+                                        },
+                                        {
+                                            "func": {
+                                                "args": [
+                                                    "total_cna_issues",
+                                                    "#9501ec"
+                                                ],
+                                                "name": "seriescolor"
+                                            }
+                                        },
+                                        {
+                                            "func": {
+                                                "args": [
+                                                    "total_cna_issues",
+                                                    "Total Open Internet-exposed issues"
+                                                ],
+                                                "name": "seriestitle"
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            "key": "xql_1756496946703",
+                            "data": {
+                                "type": "Custom XQL",
+                                "width": 50,
+                                "height": 359,
+                                "phrase": "dataset = issues \n| fields xdm.issue.name, xdm.issue.detection.method, xdm.issue.status.progress\n| filter xdm.issue.detection.method = \"CLOUD_NETWORK_ANALYZER\" or xdm.issue.name = \"Azure Storage Account default network access is set to 'Allow'\"\n| filter xdm.issue.status.progress != \"Resolved\"\n| comp count() as Assets by xdm.issue.name\n| sort desc Assets ",
+                                "entityType": "xql-widget-table-45167857-b491-4a5c-8b7f-2277cbf46ecd",
+                                "time_frame": {
+                                    "relativeTime": 86400000
+                                },
+                                "viewOptions": {
+                                    "type": "table",
+                                    "commands": []
+                                },
+                                "gridRawStorageInfo": {
+                                    "sort": null,
+                                    "coldefs": {},
+                                    "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                                    "columnWidth": "\"stretch\""
+                                }
+                            }
+                        }
+                    ]
+                }
+            ],
+            "default_dashboard_id": 1,
+            "global_id": "dae592682f6b41b6b6d8ea3614d8c51f",
+            "metadata": {
+                "params": []
+            }
+        }
+    ],
+    "widgets_data": [
+        {
+            "widget_key": "xql_1756494593334",
+            "title": "Number of Internet-exposed Issues - Graph",
+            "creation_time": 1756494593334,
+            "description": null,
+            "data": {
+                "phrase": "dataset = issues \n| fields xdm.issue.name, xdm.issue.detection.method, xdm.issue.status.progress\n| filter xdm.issue.detection.method = \"CLOUD_NETWORK_ANALYZER\" or xdm.issue.name = \"Azure Storage Account default network access is set to 'Allow'\"\n| filter xdm.issue.status.progress != \"Resolved\"\n| comp count() as Assets by xdm.issue.name\n| sort desc Assets \n\n| view graph type = column subtype = stacked layout = horizontal xaxis = xdm.issue.name yaxis = xdm.issue.name,Assets seriescolor(\"Assets\",\"#15ae3f\") ",
+                "time_frame": {
+                    "relativeTime": 86400000
+                },
+                "viewOptions": {
+                    "type": "column",
+                    "commands": [
+                        {
+                            "command": {
+                                "op": "=",
+                                "name": "subtype",
+                                "value": "stacked"
+                            }
+                        },
+                        {
+                            "command": {
+                                "op": "=",
+                                "name": "layout",
+                                "value": "horizontal"
+                            }
+                        },
+                        {
+                            "command": {
+                                "op": "=",
+                                "name": "xaxis",
+                                "value": "xdm.issue.name"
+                            }
+                        },
+                        {
+                            "command": {
+                                "op": "=",
+                                "name": "yaxis",
+                                "value": "xdm.issue.name,Assets"
+                            }
+                        },
+                        {
+                            "func": {
+                                "args": [
+                                    "Assets",
+                                    "#15ae3f"
+                                ],
+                                "name": "seriescolor"
+                            }
+                        }
+                    ]
+                }
+            },
+            "support_time_range": true,
+            "additional_info": {
+                "query_tables": [
+                    "issues"
+                ],
+                "query_uses_library": false
+            },
+            "creator_mail": ""
+        },
+        {
+            "widget_key": "xql_1756495047110",
+            "title": "List of Assets affected by a Internet-exposed Issues",
+            "creation_time": 1756495047110,
+            "description": null,
+            "data": {
+                "phrase": "dataset = asset_inventory\n| fields xdm.asset.id,xdm.asset.name\n| join (dataset = issues \n    | filter xdm.issue.detection.method = \"CLOUD_NETWORK_ANALYZER\" or xdm.issue.name = \"Azure Storage Account default network access is set to 'Allow'\"\n    | filter xdm.issue.status.progress != \"Resolved\"\n    | arrayexpand xdm.issue.asset_ids \n    | fields xdm.issue.asset_ids as issueassetids, xdm.issue.name as issuename, xdm.issue.detection.method as method\n) \nas issue xdm.asset.id = issue.issueassetids\n| fields _insert_time as Identified, xdm.asset.name as asset, issuename, _time as Last_Seen\n| sort desc Identified ",
+                "time_frame": {
+                    "relativeTime": 86400000
+                },
+                "viewOptions": {
+                    "type": "table",
+                    "commands": []
+                },
+                "gridRawStorageInfo": {
+                    "sort": null,
+                    "coldefs": {},
+                    "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                    "columnWidth": null
+                }
+            },
+            "support_time_range": true,
+            "additional_info": {
+                "query_tables": [
+                    "asset_inventory",
+                    "issues"
+                ],
+                "query_uses_library": false
+            },
+            "creator_mail": ""
+        },
+        {
+            "widget_key": "xql_1756495202980",
+            "title": "Total Open Internet-exposed Issues",
+            "creation_time": 1756495202980,
+            "description": null,
+            "data": {
+                "phrase": "dataset = issues \n| filter xdm.issue.domain = \"POSTURE\"\n| filter xdm.issue.detection.method = \"CLOUD_NETWORK_ANALYZER\" or xdm.issue.name = \"Azure Storage Account default network access is set to 'Allow'\"\n| filter xdm.issue.status.progress != \"RESOLVED\" // Only active issues\n| comp count() as Issues by xdm.issue.domain \n// Graph\n\n\n| view graph type = single subtype = standard yaxis = Issues scale_threshold(\"#37f032\") font = \"Arial\" headerfontsize = 40 ",
+                "time_frame": {
+                    "relativeTime": 86400000
+                },
+                "viewOptions": {
+                    "type": "single",
+                    "commands": [
+                        {
+                            "command": {
+                                "op": "=",
+                                "name": "subtype",
+                                "value": "standard"
+                            }
+                        },
+                        {
+                            "command": {
+                                "op": "=",
+                                "name": "yaxis",
+                                "value": "Issues"
+                            }
+                        },
+                        {
+                            "func": {
+                                "args": [
+                                    "#37f032"
+                                ],
+                                "name": "scale_threshold"
+                            }
+                        },
+                        {
+                            "command": {
+                                "op": "=",
+                                "name": "font",
+                                "value": "\"Arial\""
+                            }
+                        },
+                        {
+                            "command": {
+                                "op": "=",
+                                "name": "headerfontsize",
+                                "value": "40"
+                            }
+                        }
+                    ]
+                }
+            },
+            "support_time_range": true,
+            "additional_info": {
+                "query_tables": [
+                    "issues"
+                ],
+                "query_uses_library": false
+            },
+            "creator_mail": ""
+        },
+        {
+            "widget_key": "xql_1756495335652",
+            "title": "Trending Open Internet-exposed issues",
+            "creation_time": 1756495335652,
+            "description": "",
+            "data": {
+                "phrase": "dataset = issues \n| filter xdm.issue.domain = \"POSTURE\"\n| filter xdm.issue.detection.method = \"CLOUD_NETWORK_ANALYZER\" or xdm.issue.name = \"Azure Storage Account default network access is set to 'Allow'\"\n| filter xdm.issue.status.progress != \"Resolved\"\n| fields _insert_time as issue_date \n| bin issue_date span = 1MO \n| comp count() as total_cna_issues by issue_date\n| alter month_num = arrayindex(split(to_string(issue_date), \"-\"), 1) \n//\n| sort asc month_num \n| alter formatted_time = format_timestamp(\"%b / %Y\", issue_date)\n//Graph\n\n\n\n\n| view graph type = line show_callouts = `true` show_callouts_names = `true` xaxis = formatted_time yaxis = total_cna_resolved_issues,total_cna_issues seriescolor(\"total_cna_issues\",\"#9501ec\") seriestitle(\"total_cna_issues\",\"Total Open Internet-exposed issues\") ",
+                "time_frame": {
+                    "relativeTime": 86400000
+                },
+                "viewOptions": {
+                    "type": "line",
+                    "commands": [
+                        {
+                            "command": {
+                                "op": "=",
+                                "name": "show_callouts",
+                                "value": "true"
+                            }
+                        },
+                        {
+                            "command": {
+                                "op": "=",
+                                "name": "show_callouts_names",
+                                "value": "true"
+                            }
+                        },
+                        {
+                            "command": {
+                                "op": "=",
+                                "name": "xaxis",
+                                "value": "formatted_time"
+                            }
+                        },
+                        {
+                            "command": {
+                                "op": "=",
+                                "name": "yaxis",
+                                "value": "total_cna_resolved_issues,total_cna_issues"
+                            }
+                        },
+                        {
+                            "func": {
+                                "args": [
+                                    "total_cna_issues",
+                                    "#9501ec"
+                                ],
+                                "name": "seriescolor"
+                            }
+                        },
+                        {
+                            "func": {
+                                "args": [
+                                    "total_cna_issues",
+                                    "Total Open Internet-exposed issues"
+                                ],
+                                "name": "seriestitle"
+                            }
+                        }
+                    ]
+                }
+            },
+            "support_time_range": true,
+            "additional_info": {
+                "query_tables": [
+                    "issues"
+                ],
+                "query_uses_library": false
+            },
+            "creator_mail": ""
+        },
+        {
+            "widget_key": "xql_1756496946703",
+            "title": "Number of Internet-exposed Issues - Table",
+            "creation_time": 1756496946703,
+            "description": null,
+            "data": {
+                "phrase": "dataset = issues \n| fields xdm.issue.name, xdm.issue.detection.method, xdm.issue.status.progress\n| filter xdm.issue.detection.method = \"CLOUD_NETWORK_ANALYZER\" or xdm.issue.name = \"Azure Storage Account default network access is set to 'Allow'\"\n| filter xdm.issue.status.progress != \"Resolved\"\n| comp count() as Assets by xdm.issue.name\n| sort desc Assets ",
+                "time_frame": {
+                    "relativeTime": 86400000
+                },
+                "viewOptions": {
+                    "type": "table",
+                    "commands": []
+                },
+                "gridRawStorageInfo": {
+                    "sort": null,
+                    "coldefs": {},
+                    "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                    "columnWidth": null
+                }
+            },
+            "support_time_range": true,
+            "additional_info": {
+                "query_tables": [
+                    "issues"
+                ],
+                "query_uses_library": false
+            },
+            "creator_mail": ""
+        }
+    ],
+    "id": "dae592682f6b41b6b6d8ea3614d8c51f",
+    "name": "Internet-exposed Issues"
+}

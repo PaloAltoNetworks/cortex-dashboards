@@ -1,0 +1,481 @@
+{
+    "dashboards_data": [
+        {
+            "name": "Cloud Network Analyzer Command Center",
+            "description": "Identify all Cloud Network Analyzer issues",
+            "status": "ENABLED",
+            "layout": [
+                {
+                    "id": "row-282",
+                    "data": [
+                        {
+                            "key": "xql_1755120586055",
+                            "data": {
+                                "type": "Custom XQL",
+                                "width": 50,
+                                "height": 365,
+                                "phrase": "dataset = issues \n| fields xdm.issue.name, xdm.issue.detection.method\n| filter xdm.issue.detection.method = \"CLOUD_NETWORK_ANALYZER\"\n| comp count() as Assets by xdm.issue.name\n| sort desc Assets\n\n| view graph type = column subtype = stacked layout = horizontal xaxis = xdm.issue.name yaxis = xdm.issue.name,Assets ",
+                                "time_frame": {
+                                    "relativeTime": 86400000
+                                },
+                                "viewOptions": {
+                                    "type": "column",
+                                    "commands": [
+                                        {
+                                            "command": {
+                                                "op": "=",
+                                                "name": "subtype",
+                                                "value": "stacked"
+                                            }
+                                        },
+                                        {
+                                            "command": {
+                                                "op": "=",
+                                                "name": "layout",
+                                                "value": "horizontal"
+                                            }
+                                        },
+                                        {
+                                            "command": {
+                                                "op": "=",
+                                                "name": "xaxis",
+                                                "value": "xdm.issue.name"
+                                            }
+                                        },
+                                        {
+                                            "command": {
+                                                "op": "=",
+                                                "name": "yaxis",
+                                                "value": "xdm.issue.name,Assets"
+                                            }
+                                        }
+                                    ]
+                                },
+                                "drilldown_config": {
+                                    "actionData": {
+                                        "url": "https://placeholder.com/issues?status=STATUS_010_NEW,STATUS_020_UNDER_INVESTIGATION&detectionMethod=CLOUD_NETWORK_ANALYZER",
+                                        "openInNewTab": true
+                                    },
+                                    "actionType": "open_custom_url"
+                                }
+                            }
+                        },
+                        {
+                            "key": "xql_1755267857084",
+                            "data": {
+                                "type": "Custom XQL",
+                                "width": 50,
+                                "height": 365,
+                                "phrase": "dataset = issues \n| filter xdm.issue.domain = \"POSTURE\"\n| filter xdm.issue.detection.method = \"CLOUD_NETWORK_ANALYZER\" // Only for this detection method\n| filter xdm.issue.status.progress != \"RESOLVED\" // Only active issues\n| comp count() as Issues by xdm.issue.detection.method \n// Graph\n\n| view graph type = single subtype = standard yaxis = Issues scale_threshold(\"#13b915\",\"#931ecd\",\"10\") ",
+                                "time_frame": {
+                                    "relativeTime": 86400000
+                                },
+                                "viewOptions": {
+                                    "type": "single",
+                                    "commands": [
+                                        {
+                                            "command": {
+                                                "op": "=",
+                                                "name": "subtype",
+                                                "value": "standard"
+                                            }
+                                        },
+                                        {
+                                            "command": {
+                                                "op": "=",
+                                                "name": "yaxis",
+                                                "value": "Issues"
+                                            }
+                                        },
+                                        {
+                                            "func": {
+                                                "args": [
+                                                    "#13b915",
+                                                    "#931ecd",
+                                                    10
+                                                ],
+                                                "name": "scale_threshold"
+                                            }
+                                        }
+                                    ]
+                                },
+                                "drilldown_config": {
+                                    "actionData": {
+                                        "url": "https://placeholder.com/issues?status=STATUS_010_NEW,STATUS_020_UNDER_INVESTIGATION&detectionMethod=CLOUD_NETWORK_ANALYZER",
+                                        "openInNewTab": true
+                                    },
+                                    "actionType": "open_custom_url"
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "id": "row-1735",
+                    "data": [
+                        {
+                            "key": "xql_1755122906513",
+                            "data": {
+                                "type": "Custom XQL",
+                                "width": 100,
+                                "height": 365,
+                                "phrase": "dataset = asset_inventory\n| fields xdm.asset.id,xdm.asset.name\n| join (dataset = issues \n    | filter xdm.issue.detection.method = \"CLOUD_NETWORK_ANALYZER\"\n    | arrayexpand xdm.issue.asset_ids \n    | fields xdm.issue.asset_ids as issueassetids, xdm.issue.name as issuename, xdm.issue.detection.method as method\n) \nas issue xdm.asset.id = issue.issueassetids\n| fields xdm.asset.name as cloudasset, issuename\n| sort asc _insert_time",
+                                "entityType": "xql-widget-table-5d39823d-2e33-476d-b885-97141476062e",
+                                "time_frame": {
+                                    "relativeTime": 86400000
+                                },
+                                "viewOptions": {
+                                    "type": "table",
+                                    "commands": []
+                                },
+                                "drilldown_config": {
+                                    "actionData": {
+                                        "url": "https://placeholder.com/assets/inventory?name=$row.cloudasset",
+                                        "openInNewTab": true
+                                    },
+                                    "actionType": "open_custom_url"
+                                },
+                                "gridRawStorageInfo": {
+                                    "sort": null,
+                                    "coldefs": {},
+                                    "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                                    "columnWidth": "\"stretch\""
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "id": "row-382",
+                    "data": [
+                        {
+                            "key": "xql_1755276090183",
+                            "data": {
+                                "type": "Custom XQL",
+                                "width": 50,
+                                "height": 400,
+                                "phrase": "dataset = issues \n| filter xdm.issue.detection.method = \"CLOUD_NETWORK_ANALYZER\"\n| filter xdm.issue.status.progress != \"Resolved\"\n| fields _insert_time as issue_date \n| bin issue_date span = 1MO \n| comp count() as total_cna_issues by issue_date  \n| alter month_num = arrayindex(split(to_string(issue_date), \"-\"), 1) \n//\n//\n| join (dataset = issues \n    | filter xdm.issue.detection.method = \"CLOUD_NETWORK_ANALYZER\"\n    | filter xdm.issue.status.progress = \"Resolved\"\n    | fields _insert_time as issue_resolved_date\n    | bin issue_resolved_date span = 1MO \n    | comp count() as total_cna_resolved_issues by issue_resolved_date  \n    | alter month_num = arrayindex(split(to_string(issue_resolved_date), \"-\"), 1) \n) as issues_resolved_join issues_resolved_join.month_num = month_num\n//\n| sort asc month_num \n| alter formatted_time = format_timestamp(\"%b / %Y\", issue_date)\n//Graph\n\n\n| view graph type = line show_callouts = `true` show_callouts_names = `true` xaxis = formatted_time yaxis = total_cna_resolved_issues,total_cna_issues seriescolor(\"total_cna_resolved_issues\",\"#11e538\") ",
+                                "time_frame": {
+                                    "relativeTime": 2592000000
+                                },
+                                "viewOptions": {
+                                    "type": "line",
+                                    "commands": [
+                                        {
+                                            "command": {
+                                                "op": "=",
+                                                "name": "show_callouts",
+                                                "value": "true"
+                                            }
+                                        },
+                                        {
+                                            "command": {
+                                                "op": "=",
+                                                "name": "show_callouts_names",
+                                                "value": "true"
+                                            }
+                                        },
+                                        {
+                                            "command": {
+                                                "op": "=",
+                                                "name": "xaxis",
+                                                "value": "formatted_time"
+                                            }
+                                        },
+                                        {
+                                            "command": {
+                                                "op": "=",
+                                                "name": "yaxis",
+                                                "value": "total_cna_resolved_issues,total_cna_issues"
+                                            }
+                                        },
+                                        {
+                                            "func": {
+                                                "args": [
+                                                    "total_cna_resolved_issues",
+                                                    "#11e538"
+                                                ],
+                                                "name": "seriescolor"
+                                            }
+                                        }
+                                    ]
+                                },
+                                "drilldown_config": {
+                                    "actionData": {
+                                        "url": "https://placeholder.com/issues?status=STATUS_010_NEW,STATUS_020_UNDER_INVESTIGATION&detectionMethod=CLOUD_NETWORK_ANALYZER",
+                                        "openInNewTab": true
+                                    },
+                                    "actionType": "open_custom_url"
+                                }
+                            }
+                        },
+                        {
+                            "key": "xql_1754689455768",
+                            "data": {
+                                "type": "Custom XQL",
+                                "width": 50,
+                                "height": 400,
+                                "phrase": "dataset = issues \n| fields xdm.issue.name, xdm.issue.detection.method\n| filter xdm.issue.detection.method = \"CLOUD_NETWORK_ANALYZER\"\n| comp count() by xdm.issue.name\n",
+                                "entityType": "xql-widget-table-55ea9194-7ac9-47bd-a332-90d62d5cd21f",
+                                "time_frame": {
+                                    "relativeTime": 86400000
+                                },
+                                "viewOptions": {
+                                    "type": "table",
+                                    "commands": []
+                                },
+                                "drilldown_config": {
+                                    "actionData": {
+                                        "url": "https://placeholder.com/issues?status=STATUS_010_NEW,STATUS_020_UNDER_INVESTIGATION&detectionMethod=CLOUD_NETWORK_ANALYZER",
+                                        "openInNewTab": true
+                                    },
+                                    "actionType": "open_custom_url"
+                                },
+                                "gridRawStorageInfo": {
+                                    "sort": null,
+                                    "coldefs": {},
+                                    "rowHeight": "{\"rowHeight\":\"stretch\",\"gridRowsHeight\":\"high-row\"}",
+                                    "columnWidth": "\"stretch\""
+                                }
+                            }
+                        }
+                    ]
+                }
+            ],
+            "default_dashboard_id": 1,
+            "global_id": "34f308b531ff406babdbc49de51d960a",
+            "metadata": {
+                "params": []
+            }
+        }
+    ],
+    "widgets_data": [
+        {
+            "widget_key": "xql_1754689455768",
+            "title": "# of Cloud Network Analyzer Issues",
+            "creation_time": 1754689455768,
+            "description": null,
+            "data": {
+                "phrase": "dataset = issues \n| fields xdm.issue.name, xdm.issue.detection.method\n| filter xdm.issue.detection.method = \"CLOUD_NETWORK_ANALYZER\"\n| comp count() by xdm.issue.name\n",
+                "time_frame": {
+                    "relativeTime": 86400000
+                },
+                "viewOptions": {
+                    "type": "table",
+                    "commands": []
+                },
+                "gridRawStorageInfo": {
+                    "sort": null,
+                    "coldefs": {},
+                    "rowHeight": "{\"rowHeight\":\"stretch\",\"gridRowsHeight\":\"high-row\"}",
+                    "columnWidth": null
+                }
+            },
+            "support_time_range": true,
+            "additional_info": {
+                "query_tables": [
+                    "issues"
+                ],
+                "query_uses_library": false
+            },
+            "creator_mail": ""
+        },
+        {
+            "widget_key": "xql_1755120586055",
+            "title": "Number of Cloud Network Analyzer Issues",
+            "creation_time": 1755120586055,
+            "description": "# of Cloud Network Analyzer Issues",
+            "data": {
+                "phrase": "dataset = issues \n| fields xdm.issue.name, xdm.issue.detection.method\n| filter xdm.issue.detection.method = \"CLOUD_NETWORK_ANALYZER\"\n| comp count() as Assets by xdm.issue.name\n| sort desc Assets\n\n| view graph type = column subtype = stacked layout = horizontal xaxis = xdm.issue.name yaxis = xdm.issue.name,Assets ",
+                "time_frame": {
+                    "relativeTime": 86400000
+                },
+                "viewOptions": {
+                    "type": "column",
+                    "commands": [
+                        {
+                            "command": {
+                                "op": "=",
+                                "name": "subtype",
+                                "value": "stacked"
+                            }
+                        },
+                        {
+                            "command": {
+                                "op": "=",
+                                "name": "layout",
+                                "value": "horizontal"
+                            }
+                        },
+                        {
+                            "command": {
+                                "op": "=",
+                                "name": "xaxis",
+                                "value": "xdm.issue.name"
+                            }
+                        },
+                        {
+                            "command": {
+                                "op": "=",
+                                "name": "yaxis",
+                                "value": "xdm.issue.name,Assets"
+                            }
+                        }
+                    ]
+                }
+            },
+            "support_time_range": true,
+            "additional_info": {
+                "query_tables": [
+                    "issues"
+                ],
+                "query_uses_library": false
+            },
+            "creator_mail": ""
+        },
+        {
+            "widget_key": "xql_1755122906513",
+            "title": "List of Assets affected by a CNA Issue",
+            "creation_time": 1755122906513,
+            "description": "",
+            "data": {
+                "phrase": "dataset = asset_inventory\n| fields xdm.asset.id,xdm.asset.name\n| join (dataset = issues \n    | filter xdm.issue.detection.method = \"CLOUD_NETWORK_ANALYZER\"\n    | arrayexpand xdm.issue.asset_ids \n    | fields xdm.issue.asset_ids as issueassetids, xdm.issue.name as issuename, xdm.issue.detection.method as method\n) \nas issue xdm.asset.id = issue.issueassetids\n| fields xdm.asset.name as cloudasset, issuename\n| sort asc _insert_time",
+                "time_frame": {
+                    "relativeTime": 86400000
+                },
+                "viewOptions": {
+                    "type": "table",
+                    "commands": []
+                },
+                "gridRawStorageInfo": {
+                    "sort": null,
+                    "coldefs": {},
+                    "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                    "columnWidth": null
+                }
+            },
+            "support_time_range": true,
+            "additional_info": {
+                "query_tables": [
+                    "issues",
+                    "asset_inventory"
+                ],
+                "query_uses_library": false
+            },
+            "creator_mail": ""
+        },
+        {
+            "widget_key": "xql_1755267857084",
+            "title": "Open CNA Issues",
+            "creation_time": 1755267857084,
+            "description": "Open CNA Issues",
+            "data": {
+                "phrase": "dataset = issues \n| filter xdm.issue.domain = \"POSTURE\"\n| filter xdm.issue.detection.method = \"CLOUD_NETWORK_ANALYZER\" // Only for this detection method\n| filter xdm.issue.status.progress != \"RESOLVED\" // Only active issues\n| comp count() as Issues by xdm.issue.detection.method \n// Graph\n\n| view graph type = single subtype = standard yaxis = Issues scale_threshold(\"#13b915\",\"#931ecd\",\"10\") ",
+                "time_frame": {
+                    "relativeTime": 86400000
+                },
+                "viewOptions": {
+                    "type": "single",
+                    "commands": [
+                        {
+                            "command": {
+                                "op": "=",
+                                "name": "subtype",
+                                "value": "standard"
+                            }
+                        },
+                        {
+                            "command": {
+                                "op": "=",
+                                "name": "yaxis",
+                                "value": "Issues"
+                            }
+                        },
+                        {
+                            "func": {
+                                "args": [
+                                    "#13b915",
+                                    "#931ecd",
+                                    10
+                                ],
+                                "name": "scale_threshold"
+                            }
+                        }
+                    ]
+                }
+            },
+            "support_time_range": true,
+            "additional_info": {
+                "query_tables": [
+                    "issues"
+                ],
+                "query_uses_library": false
+            },
+            "creator_mail": ""
+        },
+        {
+            "widget_key": "xql_1755276090183",
+            "title": "Monthly Open/Resolved CNA Issues",
+            "creation_time": 1755276090183,
+            "description": null,
+            "data": {
+                "phrase": "dataset = issues \n| filter xdm.issue.detection.method = \"CLOUD_NETWORK_ANALYZER\"\n| filter xdm.issue.status.progress != \"Resolved\"\n| fields _insert_time as issue_date \n| bin issue_date span = 1MO \n| comp count() as total_cna_issues by issue_date  \n| alter month_num = arrayindex(split(to_string(issue_date), \"-\"), 1) \n//\n//\n| join (dataset = issues \n    | filter xdm.issue.detection.method = \"CLOUD_NETWORK_ANALYZER\"\n    | filter xdm.issue.status.progress = \"Resolved\"\n    | fields _insert_time as issue_resolved_date\n    | bin issue_resolved_date span = 1MO \n    | comp count() as total_cna_resolved_issues by issue_resolved_date  \n    | alter month_num = arrayindex(split(to_string(issue_resolved_date), \"-\"), 1) \n) as issues_resolved_join issues_resolved_join.month_num = month_num\n//\n| sort asc month_num \n| alter formatted_time = format_timestamp(\"%b / %Y\", issue_date)\n//Graph\n\n\n| view graph type = line show_callouts = `true` show_callouts_names = `true` xaxis = formatted_time yaxis = total_cna_resolved_issues,total_cna_issues seriescolor(\"total_cna_resolved_issues\",\"#11e538\") ",
+                "time_frame": {
+                    "relativeTime": 2592000000
+                },
+                "viewOptions": {
+                    "type": "line",
+                    "commands": [
+                        {
+                            "command": {
+                                "op": "=",
+                                "name": "show_callouts",
+                                "value": "true"
+                            }
+                        },
+                        {
+                            "command": {
+                                "op": "=",
+                                "name": "show_callouts_names",
+                                "value": "true"
+                            }
+                        },
+                        {
+                            "command": {
+                                "op": "=",
+                                "name": "xaxis",
+                                "value": "formatted_time"
+                            }
+                        },
+                        {
+                            "command": {
+                                "op": "=",
+                                "name": "yaxis",
+                                "value": "total_cna_resolved_issues,total_cna_issues"
+                            }
+                        },
+                        {
+                            "func": {
+                                "args": [
+                                    "total_cna_resolved_issues",
+                                    "#11e538"
+                                ],
+                                "name": "seriescolor"
+                            }
+                        }
+                    ]
+                }
+            },
+            "support_time_range": true,
+            "additional_info": {
+                "query_tables": [
+                    "issues"
+                ],
+                "query_uses_library": false
+            },
+            "creator_mail": ""
+        }
+    ],
+    "id": "34f308b531ff406babdbc49de51d960a",
+    "name": "Cloud Network Analyzer Command Center"
+}
