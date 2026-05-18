@@ -1,0 +1,3623 @@
+{
+  "dashboards_data": [
+    {
+      "name": "CORTEX - [AWS VPC Network Flows Analysis]",
+      "description": "Cloud VPCflow log analysis built on raw cloud audit logs (Cloud Flow Log filter). Covers AWS VPC Flow Logs (amazon_aws_raw) and Azure NSG Flow Logs (msft_azure_raw) with GCP placeholder. Includes traffic volume, byte-level analysis, TCP flags, ACCEPT/REJECT breakdown, IMDS detection, geo-location, and full flow detail tables.  replaces network_story preset which lacked volume data and included rejected connections.",
+      "status": "ENABLED",
+      "layout": [
+        {
+          "id": "row-cf4-r01",
+          "data": [
+            {
+              "key": "xql_cf_v4_001",
+              "data": {
+                "type": "Custom XQL",
+                "width": 25,
+                "height": 400,
+                "params": [
+                  {
+                    "name": "src_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "action",
+                    "value": "ACCEPT"
+                  },
+                  {
+                    "name": "region",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dstport",
+                    "value": "*"
+                  },
+                  {
+                    "name": "protocol",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "src_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_vpc",
+                    "value": "*"
+                  },
+                  {
+                    "name": "flag_label",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
+                    "name": "min_bytes",
+                    "value": "100"
+                  }
+                ],
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| filter region not in (null, \"\")\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp sum(total_bytes) as Total_Bytes, count() as Flows by region\n| sort desc Total_Bytes\n| limit 20\n| view graph type = pie subtype = full xaxis = region yaxis = Total_Bytes",
+                "time_frame": {
+                  "relativeTime": 86400000
+                },
+                "viewOptions": {
+                  "type": "pie",
+                  "commands": [
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "subtype",
+                        "value": "full"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "xaxis",
+                        "value": "region"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "yaxis",
+                        "value": "Total_Bytes"
+                      }
+                    }
+                  ]
+                },
+                "drilldown_config": {
+                  "actionData": [
+                    {
+                      "param": "region",
+                      "value": "$x_axis.value"
+                    }
+                  ],
+                  "actionType": "in_dashboard_drilldown"
+                },
+                "gridRawStorageInfo": {
+                  "sort": null,
+                  "coldefs": {},
+                  "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                  "columnWidth": "\"stretch\""
+                }
+              }
+            },
+            {
+              "key": "xql_cf_v4_003",
+              "data": {
+                "type": "Custom XQL",
+                "width": 25,
+                "height": 400,
+                "params": [
+                  {
+                    "name": "src_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "action",
+                    "value": "ACCEPT"
+                  },
+                  {
+                    "name": "region",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dstport",
+                    "value": "*"
+                  },
+                  {
+                    "name": "protocol",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "src_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_vpc",
+                    "value": "*"
+                  },
+                  {
+                    "name": "flag_label",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
+                    "name": "min_bytes",
+                    "value": "100"
+                  }
+                ],
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows by proto_name\n| sort desc Flows\n| view graph type = pie subtype = full xaxis = proto_name yaxis = Flows",
+                "time_frame": {
+                  "relativeTime": 86400000
+                },
+                "viewOptions": {
+                  "type": "pie",
+                  "commands": [
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "subtype",
+                        "value": "full"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "xaxis",
+                        "value": "proto_name"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "yaxis",
+                        "value": "Flows"
+                      }
+                    }
+                  ]
+                },
+                "drilldown_config": {
+                  "actionData": [
+                    {
+                      "param": "protocol",
+                      "value": "$x_axis.value"
+                    }
+                  ],
+                  "actionType": "in_dashboard_drilldown"
+                },
+                "gridRawStorageInfo": {
+                  "sort": null,
+                  "coldefs": {},
+                  "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                  "columnWidth": "\"stretch\""
+                }
+              }
+            },
+            {
+              "key": "xql_cf_v4_008",
+              "data": {
+                "type": "Custom XQL",
+                "width": 25,
+                "height": 400,
+                "params": [
+                  {
+                    "name": "src_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "action",
+                    "value": "ACCEPT"
+                  },
+                  {
+                    "name": "region",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dstport",
+                    "value": "*"
+                  },
+                  {
+                    "name": "protocol",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "src_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_vpc",
+                    "value": "*"
+                  },
+                  {
+                    "name": "flag_label",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
+                    "name": "min_bytes",
+                    "value": "100"
+                  }
+                ],
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter dstaddr not in (null, \"\")\n| iploc dstaddr loc_country\n| filter loc_country not in (null, \"\")\n| filter loc_country in ($dst_country)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by loc_country\n| sort desc Flows\n| limit 20\n| view graph type = pie subtype = full xaxis = loc_country yaxis = Flows",
+                "time_frame": {
+                  "relativeTime": 86400000
+                },
+                "viewOptions": {
+                  "type": "pie",
+                  "commands": [
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "subtype",
+                        "value": "full"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "xaxis",
+                        "value": "loc_country"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "yaxis",
+                        "value": "Flows"
+                      }
+                    }
+                  ]
+                },
+                "drilldown_config": {
+                  "actionData": [
+                    {
+                      "param": "dst_country",
+                      "value": "$x_axis.value"
+                    }
+                  ],
+                  "actionType": "in_dashboard_drilldown"
+                },
+                "gridRawStorageInfo": {
+                  "sort": null,
+                  "coldefs": {},
+                  "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                  "columnWidth": "\"stretch\""
+                }
+              }
+            },
+            {
+              "key": "xql_cf_v4_018",
+              "data": {
+                "type": "Custom XQL",
+                "width": 25,
+                "height": 400,
+                "params": [
+                  {
+                    "name": "src_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "action",
+                    "value": "ACCEPT"
+                  },
+                  {
+                    "name": "region",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dstport",
+                    "value": "*"
+                  },
+                  {
+                    "name": "protocol",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "src_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_vpc",
+                    "value": "*"
+                  },
+                  {
+                    "name": "flag_label",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
+                    "name": "min_bytes",
+                    "value": "100"
+                  }
+                ],
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter srcaddr not in (null, \"\")\n| iploc srcaddr loc_country\n| filter loc_country not in (null, \"\")\n| filter loc_country in ($src_country)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by loc_country\n| sort desc Flows\n| limit 20\n| view graph type = pie subtype = full xaxis = loc_country yaxis = Flows",
+                "time_frame": {
+                  "relativeTime": 86400000
+                },
+                "viewOptions": {
+                  "type": "pie",
+                  "commands": [
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "subtype",
+                        "value": "full"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "xaxis",
+                        "value": "loc_country"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "yaxis",
+                        "value": "Flows"
+                      }
+                    }
+                  ]
+                },
+                "drilldown_config": {
+                  "actionData": [
+                    {
+                      "param": "src_country",
+                      "value": "$x_axis.value"
+                    }
+                  ],
+                  "actionType": "in_dashboard_drilldown"
+                },
+                "gridRawStorageInfo": {
+                  "sort": null,
+                  "coldefs": {},
+                  "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                  "columnWidth": "\"stretch\""
+                }
+              }
+            },
+            {
+              "key": "xql_cf_v4_019",
+              "data": {
+                "type": "Custom XQL",
+                "width": 25,
+                "height": 400,
+                "params": [
+                  {
+                    "name": "src_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "action",
+                    "value": "ACCEPT"
+                  },
+                  {
+                    "name": "region",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dstport",
+                    "value": "*"
+                  },
+                  {
+                    "name": "protocol",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "src_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_vpc",
+                    "value": "*"
+                  },
+                  {
+                    "name": "flag_label",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
+                    "name": "min_bytes",
+                    "value": "100"
+                  }
+                ],
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| alter account_id_str = to_string(account_id)\n| comp count() as Flows, sum(total_bytes) as Total_Bytes by account_id_str\n| sort desc Flows\n| limit 20\n| view graph type = pie subtype = full xaxis = account_id_str yaxis = Flows",
+                "time_frame": {
+                  "relativeTime": 86400000
+                },
+                "viewOptions": {
+                  "type": "pie",
+                  "commands": [
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "subtype",
+                        "value": "full"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "xaxis",
+                        "value": "account_id_str"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "yaxis",
+                        "value": "Flows"
+                      }
+                    }
+                  ]
+                },
+                "drilldown_config": {
+                  "actionData": [
+                    {
+                      "param": "filter_account",
+                      "value": "$x_axis.value"
+                    }
+                  ],
+                  "actionType": "in_dashboard_drilldown"
+                },
+                "gridRawStorageInfo": {
+                  "sort": null,
+                  "coldefs": {},
+                  "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                  "columnWidth": "\"stretch\""
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "row-cf4-r02",
+          "data": [
+            {
+              "key": "xql_cf_v4_002",
+              "data": {
+                "type": "Custom XQL",
+                "width": 50,
+                "height": 400,
+                "params": [
+                  {
+                    "name": "src_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "action",
+                    "value": "ACCEPT"
+                  },
+                  {
+                    "name": "region",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dstport",
+                    "value": "*"
+                  },
+                  {
+                    "name": "protocol",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "src_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_vpc",
+                    "value": "*"
+                  },
+                  {
+                    "name": "flag_label",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
+                    "name": "min_bytes",
+                    "value": "100"
+                  }
+                ],
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by action\n| sort desc Flows\n| view graph type = column subtype = grouped layout = horizontal xaxis = action yaxis = Flows",
+                "time_frame": {
+                  "relativeTime": 86400000
+                },
+                "viewOptions": {
+                  "type": "column",
+                  "commands": [
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "subtype",
+                        "value": "grouped"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "layout",
+                        "value": "horizontal"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "xaxis",
+                        "value": "action"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "yaxis",
+                        "value": "Flows"
+                      }
+                    }
+                  ]
+                },
+                "drilldown_config": {
+                  "actionData": [
+                    {
+                      "param": "action",
+                      "value": "$x_axis.value"
+                    }
+                  ],
+                  "actionType": "in_dashboard_drilldown"
+                },
+                "gridRawStorageInfo": {
+                  "sort": null,
+                  "coldefs": {},
+                  "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                  "columnWidth": "\"stretch\""
+                }
+              }
+            },
+            {
+              "key": "xql_cf_v4_007",
+              "data": {
+                "type": "Custom XQL",
+                "width": 50,
+                "height": 400,
+                "params": [
+                  {
+                    "name": "src_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "action",
+                    "value": "ACCEPT"
+                  },
+                  {
+                    "name": "region",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dstport",
+                    "value": "*"
+                  },
+                  {
+                    "name": "protocol",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "src_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_vpc",
+                    "value": "*"
+                  },
+                  {
+                    "name": "flag_label",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
+                    "name": "min_bytes",
+                    "value": "100"
+                  }
+                ],
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter vpc_id not in (null, \"\")\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by vpc_id\n| sort desc Flows\n| limit 20\n| view graph type = pie subtype = full xaxis = vpc_id yaxis = Flows",
+                "time_frame": {
+                  "relativeTime": 86400000
+                },
+                "viewOptions": {
+                  "type": "pie",
+                  "commands": [
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "subtype",
+                        "value": "full"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "xaxis",
+                        "value": "vpc_id"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "yaxis",
+                        "value": "Flows"
+                      }
+                    }
+                  ]
+                },
+                "drilldown_config": {
+                  "actionData": [
+                    {
+                      "param": "filter_vpc",
+                      "value": "$x_axis.value"
+                    }
+                  ],
+                  "actionType": "in_dashboard_drilldown"
+                },
+                "gridRawStorageInfo": {
+                  "sort": null,
+                  "coldefs": {},
+                  "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                  "columnWidth": "\"stretch\""
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "row-cf4-r03",
+          "data": [
+            {
+              "key": "xql_cf_v4_004",
+              "data": {
+                "type": "Custom XQL",
+                "width": 50,
+                "height": 450,
+                "params": [
+                  {
+                    "name": "src_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "action",
+                    "value": "ACCEPT"
+                  },
+                  {
+                    "name": "region",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dstport",
+                    "value": "*"
+                  },
+                  {
+                    "name": "protocol",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "src_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_vpc",
+                    "value": "*"
+                  },
+                  {
+                    "name": "flag_label",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
+                    "name": "min_bytes",
+                    "value": "100"
+                  }
+                ],
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter src_ip not in (null, \"\")\n| comp sum(to_number(bytes)) as Total_Bytes, count() as Flows by src_ip\n| sort desc Total_Bytes\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = src_ip yaxis = Total_Bytes",
+                "time_frame": {
+                  "relativeTime": 86400000
+                },
+                "viewOptions": {
+                  "type": "column",
+                  "commands": [
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "subtype",
+                        "value": "grouped"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "layout",
+                        "value": "horizontal"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "xaxis",
+                        "value": "src_ip"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "yaxis",
+                        "value": "Total_Bytes"
+                      }
+                    }
+                  ]
+                },
+                "drilldown_config": {
+                  "actionData": [
+                    {
+                      "param": "src_ip",
+                      "value": "$x_axis.value"
+                    }
+                  ],
+                  "actionType": "in_dashboard_drilldown"
+                },
+                "gridRawStorageInfo": {
+                  "sort": null,
+                  "coldefs": {},
+                  "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                  "columnWidth": "\"stretch\""
+                }
+              }
+            },
+            {
+              "key": "xql_cf_v4_005",
+              "data": {
+                "type": "Custom XQL",
+                "width": 50,
+                "height": 450,
+                "params": [
+                  {
+                    "name": "src_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "action",
+                    "value": "ACCEPT"
+                  },
+                  {
+                    "name": "region",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dstport",
+                    "value": "*"
+                  },
+                  {
+                    "name": "protocol",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "src_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_vpc",
+                    "value": "*"
+                  },
+                  {
+                    "name": "flag_label",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
+                    "name": "min_bytes",
+                    "value": "100"
+                  }
+                ],
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter dst_ip not in (null, \"\")\n| comp sum(to_number(bytes)) as Total_Bytes, count() as Flows by dst_ip\n| sort desc Total_Bytes\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = dst_ip yaxis = Total_Bytes",
+                "time_frame": {
+                  "relativeTime": 86400000
+                },
+                "viewOptions": {
+                  "type": "column",
+                  "commands": [
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "subtype",
+                        "value": "grouped"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "layout",
+                        "value": "horizontal"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "xaxis",
+                        "value": "dst_ip"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "yaxis",
+                        "value": "Total_Bytes"
+                      }
+                    }
+                  ]
+                },
+                "drilldown_config": {
+                  "actionData": [
+                    {
+                      "param": "dst_ip",
+                      "value": "$x_axis.value"
+                    }
+                  ],
+                  "actionType": "in_dashboard_drilldown"
+                },
+                "gridRawStorageInfo": {
+                  "sort": null,
+                  "coldefs": {},
+                  "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                  "columnWidth": "\"stretch\""
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "row-cf4-r04",
+          "data": [
+            {
+              "key": "xql_cf_v4_006",
+              "data": {
+                "type": "Custom XQL",
+                "width": 50,
+                "height": 450,
+                "params": [
+                  {
+                    "name": "src_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "action",
+                    "value": "ACCEPT"
+                  },
+                  {
+                    "name": "region",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dstport",
+                    "value": "*"
+                  },
+                  {
+                    "name": "protocol",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "src_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_vpc",
+                    "value": "*"
+                  },
+                  {
+                    "name": "flag_label",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
+                    "name": "min_bytes",
+                    "value": "100"
+                  }
+                ],
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| filter dstport != null\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by dstport_str, proto_name\n| sort desc Flows\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = dstport_str yaxis = Flows",
+                "time_frame": {
+                  "relativeTime": 86400000
+                },
+                "viewOptions": {
+                  "type": "column",
+                  "commands": [
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "subtype",
+                        "value": "grouped"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "layout",
+                        "value": "horizontal"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "xaxis",
+                        "value": "dstport_str"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "yaxis",
+                        "value": "Flows"
+                      }
+                    }
+                  ]
+                },
+                "drilldown_config": {
+                  "actionData": [
+                    {
+                      "param": "dstport",
+                      "value": "$x_axis.value"
+                    }
+                  ],
+                  "actionType": "in_dashboard_drilldown"
+                },
+                "gridRawStorageInfo": {
+                  "sort": null,
+                  "coldefs": {},
+                  "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                  "columnWidth": "\"stretch\""
+                }
+              }
+            },
+            {
+              "key": "xql_cf_v4_012",
+              "data": {
+                "type": "Custom XQL",
+                "width": 50,
+                "height": 450,
+                "params": [
+                  {
+                    "name": "src_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "action",
+                    "value": "ACCEPT"
+                  },
+                  {
+                    "name": "region",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dstport",
+                    "value": "*"
+                  },
+                  {
+                    "name": "protocol",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "src_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_vpc",
+                    "value": "*"
+                  },
+                  {
+                    "name": "flag_label",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
+                    "name": "min_bytes",
+                    "value": "100"
+                  }
+                ],
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter protocol = 6\n| filter action in ($action)\n| filter region in ($region)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| filter tcp_flags != null\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows by flag_label\n| sort desc Flows\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = flag_label yaxis = Flows",
+                "time_frame": {
+                  "relativeTime": 86400000
+                },
+                "viewOptions": {
+                  "type": "column",
+                  "commands": [
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "subtype",
+                        "value": "grouped"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "layout",
+                        "value": "horizontal"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "xaxis",
+                        "value": "flag_label"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "yaxis",
+                        "value": "Flows"
+                      }
+                    }
+                  ]
+                },
+                "drilldown_config": {
+                  "actionData": [
+                    {
+                      "param": "flag_label",
+                      "value": "$x_axis.value"
+                    }
+                  ],
+                  "actionType": "in_dashboard_drilldown"
+                },
+                "gridRawStorageInfo": {
+                  "sort": null,
+                  "coldefs": {},
+                  "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                  "columnWidth": "\"stretch\""
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "row-cf4-r05",
+          "data": [
+            {
+              "key": "xql_cf_v4_009",
+              "data": {
+                "type": "Custom XQL",
+                "width": 100,
+                "height": 450,
+                "params": [
+                  {
+                    "name": "src_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "action",
+                    "value": "ACCEPT"
+                  },
+                  {
+                    "name": "region",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dstport",
+                    "value": "*"
+                  },
+                  {
+                    "name": "protocol",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "src_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_vpc",
+                    "value": "*"
+                  },
+                  {
+                    "name": "flag_label",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
+                    "name": "min_bytes",
+                    "value": "100"
+                  }
+                ],
+                "phrase": "config timeframe = 7d\n| dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| alter hour_bucket = format_timestamp(\"%Y-%m-%d %H:00\", _time)\n| comp sum(total_bytes) as Total_Bytes, count() as Flows by hour_bucket\n| sort asc hour_bucket\n| view graph type = line xaxis = hour_bucket yaxis = Total_Bytes",
+                "timeSpan": {
+                  "toTime": "now",
+                  "fromTime": "7d",
+                  "isRelative": true
+                },
+                "time_frame": {
+                  "relativeTime": 604800000
+                },
+                "viewOptions": {
+                  "type": "line",
+                  "commands": [
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "xaxis",
+                        "value": "hour_bucket"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "yaxis",
+                        "value": "Total_Bytes"
+                      }
+                    }
+                  ]
+                },
+                "drilldown_config": null,
+                "gridRawStorageInfo": {
+                  "sort": null,
+                  "coldefs": {},
+                  "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                  "columnWidth": "\"stretch\""
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "row-cf4-r06",
+          "data": [
+            {
+              "key": "xql_cf_v4_016",
+              "data": {
+                "type": "Custom XQL",
+                "width": 100,
+                "height": 400,
+                "params": [
+                  {
+                    "name": "src_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "action",
+                    "value": "ACCEPT"
+                  },
+                  {
+                    "name": "region",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dstport",
+                    "value": "*"
+                  },
+                  {
+                    "name": "protocol",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "src_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_vpc",
+                    "value": "*"
+                  },
+                  {
+                    "name": "flag_label",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
+                    "name": "min_bytes",
+                    "value": "100"
+                  }
+                ],
+                "phrase": "config timeframe = 7d\n| dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp sum(total_bytes) as Total_Bytes, count() as Flows, values(action) as Actions by src_ip, dst_ip, srcport, proto_name\n| sort desc Total_Bytes\n| limit 20",
+                "timeSpan": {
+                  "toTime": "now",
+                  "fromTime": "7d",
+                  "isRelative": true
+                },
+                "time_frame": {
+                  "relativeTime": 86400000
+                },
+                "viewOptions": {
+                  "type": "table"
+                },
+                "drilldown_config": {
+                  "actionData": [
+                    {
+                      "param": "src_ip",
+                      "value": "$row.src_ip"
+                    }
+                  ],
+                  "actionType": "in_dashboard_drilldown"
+                },
+                "gridRawStorageInfo": {
+                  "sort": null,
+                  "coldefs": {},
+                  "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                  "columnWidth": "\"stretch\""
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "row-cf4-r07",
+          "data": [
+            {
+              "key": "xql_cf_v4_010",
+              "data": {
+                "type": "Custom XQL",
+                "width": 50,
+                "height": 500,
+                "params": [
+                  {
+                    "name": "src_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "action",
+                    "value": "ACCEPT"
+                  },
+                  {
+                    "name": "region",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dstport",
+                    "value": "*"
+                  },
+                  {
+                    "name": "protocol",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "src_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_vpc",
+                    "value": "*"
+                  },
+                  {
+                    "name": "flag_label",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
+                    "name": "min_bytes",
+                    "value": "100"
+                  }
+                ],
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action = \"REJECT\"\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as REJECTED_FLOWS, count_distinct(dstport) as UNIQUE_PORTS by src_ip\n| sort desc REJECTED_FLOWS\n| limit 25",
+                "time_frame": {
+                  "relativeTime": 86400000
+                },
+                "viewOptions": {
+                  "type": "table"
+                },
+                "drilldown_config": {
+                  "actionData": [
+                    {
+                      "param": "src_ip",
+                      "value": "$row.src_ip"
+                    }
+                  ],
+                  "actionType": "in_dashboard_drilldown"
+                },
+                "gridRawStorageInfo": {
+                  "sort": null,
+                  "coldefs": {},
+                  "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                  "columnWidth": "\"stretch\""
+                }
+              }
+            },
+            {
+              "key": "xql_cf_v4_013",
+              "data": {
+                "type": "Custom XQL",
+                "width": 50,
+                "height": 500,
+                "params": [
+                  {
+                    "name": "src_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "action",
+                    "value": "ACCEPT"
+                  },
+                  {
+                    "name": "region",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dstport",
+                    "value": "*"
+                  },
+                  {
+                    "name": "protocol",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "src_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_vpc",
+                    "value": "*"
+                  },
+                  {
+                    "name": "flag_label",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
+                    "name": "min_bytes",
+                    "value": "100"
+                  }
+                ],
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter dstaddr incidr \"169.254.0.0/16\"\n      or pkt_dstaddr incidr \"169.254.0.0/16\"\n      or srcaddr incidr \"169.254.0.0/16\"\n      or pkt_srcaddr incidr \"169.254.0.0/16\"\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(protocol = 6, \"TCP\", protocol = 17, \"UDP\", protocol = 1, \"ICMP\", concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| fields _time, src_ip, dst_ip, srcport, dstport, proto_name, action, bytes, packets, instance_id, vpc_id, region, account_id, log_status\n| sort desc _time\n| limit 500",
+                "time_frame": {
+                  "relativeTime": 86400000
+                },
+                "viewOptions": {
+                  "type": "table"
+                },
+                "drilldown_config": {
+                  "actionData": [
+                    {
+                      "param": "src_ip",
+                      "value": "$row.src_ip"
+                    }
+                  ],
+                  "actionType": "in_dashboard_drilldown"
+                },
+                "gridRawStorageInfo": {
+                  "sort": null,
+                  "coldefs": {},
+                  "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                  "columnWidth": "\"stretch\""
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "row-cf4-r08",
+          "data": [
+            {
+              "key": "xql_cf_v4_014",
+              "data": {
+                "type": "Custom XQL",
+                "width": 100,
+                "height": 600,
+                "params": [
+                  {
+                    "name": "src_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "action",
+                    "value": "ACCEPT"
+                  },
+                  {
+                    "name": "region",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dstport",
+                    "value": "*"
+                  },
+                  {
+                    "name": "protocol",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "src_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_vpc",
+                    "value": "*"
+                  },
+                  {
+                    "name": "flag_label",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
+                    "name": "min_bytes",
+                    "value": "100"
+                  }
+                ],
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| fields _time, src_ip, dst_ip, srcport, dstport, proto_name, action, total_bytes, packets, flag_label, instance_id, vpc_id, subnet_id, region, account_id, log_status\n| sort desc total_bytes\n| limit 500",
+                "time_frame": {
+                  "relativeTime": 86400000
+                },
+                "viewOptions": {
+                  "type": "table"
+                },
+                "drilldown_config": {
+                  "actionData": [
+                    {
+                      "param": "src_ip",
+                      "value": "$row.src_ip"
+                    }
+                  ],
+                  "actionType": "in_dashboard_drilldown"
+                },
+                "gridRawStorageInfo": {
+                  "sort": null,
+                  "coldefs": {},
+                  "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                  "columnWidth": "\"stretch\""
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "default_dashboard_id": 1,
+      "global_id": "cloud_flow_logs_v4",
+      "metadata": {
+        "params": [
+          {
+            "name": "src_ip",
+            "type": "DYNAMIC",
+            "title": "Source IP",
+            "value": [],
+            "executionID": "c16a2196d16d4c_8190351_inv",
+            "valueOptions": [],
+            "investigation": {
+              "ttl": "0",
+              "timeframe": {
+                "relativeTime": 86400000
+              },
+              "input_dict": {
+                "xql": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| filter src_ip not in (null, \"\")\n| fields src_ip\n| dedup src_ip\n| sort asc src_ip",
+                "tenants": [],
+                "schedule": null,
+                "query_editor": "xql",
+                "notification_link": "xql/xql-search/_EXECUTION_ID_",
+                "run_in_background": false,
+                "query_definition_name": "XQL-QUERY-CF-SRC-IP"
+              },
+              "query_source_metadata": {
+                "source": "investigation"
+              }
+            },
+            "investigationError": null,
+            "filterComponentType": "MULTI_SELECT",
+            "investigationColumn": "src_ip"
+          },
+          {
+            "name": "dst_ip",
+            "type": "DYNAMIC",
+            "title": "Destination IP",
+            "value": [],
+            "executionID": "87bd66b9fd054b_8190346_inv",
+            "valueOptions": [],
+            "investigation": {
+              "ttl": "0",
+              "timeframe": {
+                "relativeTime": 86400000
+              },
+              "input_dict": {
+                "xql": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter dst_ip not in (null, \"\")\n| fields dst_ip\n| dedup dst_ip\n| sort asc dst_ip",
+                "tenants": [],
+                "schedule": null,
+                "query_editor": "xql",
+                "notification_link": "xql/xql-search/_EXECUTION_ID_",
+                "run_in_background": false,
+                "query_definition_name": "XQL-QUERY-CF-DST-IP"
+              },
+              "query_source_metadata": {
+                "source": "investigation"
+              }
+            },
+            "investigationError": null,
+            "filterComponentType": "MULTI_SELECT",
+            "investigationColumn": "dst_ip"
+          },
+          {
+            "name": "action",
+            "type": "STATIC",
+            "title": "Action",
+            "value": [
+              "ACCEPT"
+            ],
+            "executionID": null,
+            "valueOptions": [
+              "ACCEPT",
+              "REJECT"
+            ],
+            "investigation": null,
+            "investigationError": null,
+            "filterComponentType": "MULTI_SELECT",
+            "investigationColumn": "action"
+          },
+          {
+            "name": "region",
+            "type": "DYNAMIC",
+            "title": "Region",
+            "value": [],
+            "executionID": "828e1b9137d34d_8190349_inv",
+            "valueOptions": [],
+            "investigation": {
+              "ttl": "0",
+              "timeframe": {
+                "relativeTime": 86400000
+              },
+              "input_dict": {
+                "xql": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter region not in (null, \"\")\n| comp count() as Flows by region\n| sort desc Flows\n| limit 50\n| fields region",
+                "tenants": [],
+                "schedule": null,
+                "query_editor": "xql",
+                "notification_link": "xql/xql-search/_EXECUTION_ID_",
+                "run_in_background": false,
+                "query_definition_name": "XQL-QUERY-CF-REGION"
+              },
+              "query_source_metadata": {
+                "source": "investigation"
+              }
+            },
+            "investigationError": null,
+            "filterComponentType": "MULTI_SELECT",
+            "investigationColumn": "region"
+          },
+          {
+            "name": "dstport",
+            "type": "DYNAMIC",
+            "title": "Dest Port",
+            "value": [],
+            "executionID": "7de4b48731b04f_8190345_inv",
+            "valueOptions": [],
+            "investigation": {
+              "ttl": "0",
+              "timeframe": {
+                "relativeTime": 86400000
+              },
+              "input_dict": {
+                "xql": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter dstport != null\n| comp count() as Flows by dstport\n| sort desc Flows\n| limit 100\n| alter dstport_str = to_string(dstport)\n| fields dstport_str",
+                "tenants": [],
+                "schedule": null,
+                "query_editor": "xql",
+                "notification_link": "xql/xql-search/_EXECUTION_ID_",
+                "run_in_background": false,
+                "query_definition_name": "XQL-QUERY-CF-DSTPORT"
+              },
+              "query_source_metadata": {
+                "source": "investigation"
+              }
+            },
+            "investigationError": null,
+            "filterComponentType": "MULTI_SELECT",
+            "investigationColumn": "dstport_str"
+          },
+          {
+            "name": "protocol",
+            "type": "STATIC",
+            "title": "Protocol",
+            "value": "",
+            "executionID": null,
+            "valueOptions": [
+              "TCP",
+              "UDP",
+              "ICMP",
+              "IPv6-Encap",
+              "GRE",
+              "IP-in-IP",
+              "SCTP",
+              "ESP",
+              "AH",
+              "ICMPv6"
+            ],
+            "investigation": null,
+            "investigationError": null,
+            "filterComponentType": "MULTI_SELECT",
+            "investigationColumn": "proto_name"
+          },
+          {
+            "name": "dst_country",
+            "type": "DYNAMIC",
+            "title": "Dst Country",
+            "value": [],
+            "executionID": "28243a14add947_8190348_inv",
+            "valueOptions": [],
+            "investigation": {
+              "ttl": "0",
+              "timeframe": {
+                "relativeTime": 86400000
+              },
+              "input_dict": {
+                "xql": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter dstaddr not in (null, \"\")\n| iploc dstaddr loc_country\n| filter loc_country not in (null, \"\")\n| comp count() as Flows by loc_country\n| sort desc Flows\n| limit 100\n| fields loc_country",
+                "tenants": [],
+                "schedule": null,
+                "query_editor": "xql",
+                "notification_link": "xql/xql-search/_EXECUTION_ID_",
+                "run_in_background": false,
+                "query_definition_name": "XQL-QUERY-CF-COUNTRY"
+              },
+              "query_source_metadata": {
+                "source": "investigation"
+              }
+            },
+            "investigationError": null,
+            "filterComponentType": "MULTI_SELECT",
+            "investigationColumn": "loc_country"
+          },
+          {
+            "name": "src_country",
+            "type": "DYNAMIC",
+            "title": "Src Country",
+            "value": [],
+            "executionID": "1cf7d8b40ebd41_8190347_inv",
+            "valueOptions": [],
+            "investigation": {
+              "ttl": "0",
+              "timeframe": {
+                "relativeTime": 86400000
+              },
+              "input_dict": {
+                "xql": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter srcaddr not in (null, \"\")\n| iploc srcaddr loc_country\n| filter loc_country not in (null, \"\")\n| comp count() as Flows by loc_country\n| sort desc Flows\n| limit 100\n| fields loc_country",
+                "tenants": [],
+                "schedule": null,
+                "query_editor": "xql",
+                "notification_link": "xql/xql-search/_EXECUTION_ID_",
+                "run_in_background": false,
+                "query_definition_name": "XQL-QUERY-CF-COUNTRY"
+              },
+              "query_source_metadata": {
+                "source": "investigation"
+              }
+            },
+            "investigationError": null,
+            "filterComponentType": "MULTI_SELECT",
+            "investigationColumn": "loc_country"
+          },
+          {
+            "name": "filter_vpc",
+            "type": "DYNAMIC",
+            "title": "VPC",
+            "value": [],
+            "executionID": "195e10ad4c8a4e_8190350_inv",
+            "valueOptions": [],
+            "investigation": {
+              "ttl": "0",
+              "timeframe": {
+                "relativeTime": 86400000
+              },
+              "input_dict": {
+                "xql": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter vpc_id not in (null, \"\")\n| comp count() as Flows by vpc_id\n| sort desc Flows\n| limit 50\n| fields vpc_id",
+                "tenants": [],
+                "schedule": null,
+                "query_editor": "xql",
+                "notification_link": "xql/xql-search/_EXECUTION_ID_",
+                "run_in_background": false,
+                "query_definition_name": "XQL-QUERY-CF-VPC"
+              },
+              "query_source_metadata": {
+                "source": "investigation"
+              }
+            },
+            "investigationError": null,
+            "filterComponentType": "MULTI_SELECT",
+            "investigationColumn": "vpc_id"
+          },
+          {
+            "name": "flag_label",
+            "type": "STATIC",
+            "title": "TCP Flag",
+            "value": "",
+            "executionID": null,
+            "valueOptions": [
+              "No Flags",
+              "FIN",
+              "SYN",
+              "FIN+SYN",
+              "RST",
+              "FIN+RST",
+              "SYN+RST",
+              "FIN+SYN+RST",
+              "ACK",
+              "FIN+ACK",
+              "SYN+ACK",
+              "FIN+SYN+ACK",
+              "RST+ACK",
+              "SYN+RST+ACK",
+              "FIN+SYN+RST+ACK",
+              "PSH+ACK",
+              "FIN+PSH+ACK",
+              "SYN+PSH+ACK",
+              "FIN+SYN+PSH+ACK",
+              "RST+PSH+ACK"
+            ],
+            "investigation": null,
+            "investigationError": null,
+            "filterComponentType": "MULTI_SELECT",
+            "investigationColumn": "flag_label"
+          },
+          {
+            "name": "filter_account",
+            "type": "STATIC",
+            "title": "Account ID",
+            "value": "*",
+            "valueOptions": [],
+            "investigation": null,
+            "investigationError": null,
+            "filterComponentType": "TEXT",
+            "investigationColumn": "account_id_str"
+          },
+          {
+            "name": "min_bytes",
+            "type": "STATIC",
+            "title": "Min Bytes",
+            "value": "100",
+            "executionID": null,
+            "valueOptions": [
+              "0",
+              "100",
+              "1000",
+              "10000"
+            ],
+            "investigation": null,
+            "investigationError": null,
+            "filterComponentType": "SINGLE_SELECT",
+            "investigationColumn": "min_bytes"
+          }
+        ]
+      }
+    }
+  ],
+  "widgets_data": [
+    {
+      "widget_key": "xql_cf_v4_018",
+      "title": "Traffic by Source Country (AWS)",
+      "creation_time": 1777623038144,
+      "description": "Flow count and bytes by source country using iploc on srcaddr",
+      "data": {
+        "params": [
+          {
+            "name": "src_ip",
+            "value": "*"
+          },
+          {
+            "name": "dst_ip",
+            "value": "*"
+          },
+          {
+            "name": "action",
+            "value": "ACCEPT"
+          },
+          {
+            "name": "region",
+            "value": "*"
+          },
+          {
+            "name": "dstport",
+            "value": "*"
+          },
+          {
+            "name": "protocol",
+            "value": "*"
+          },
+          {
+            "name": "dst_country",
+            "value": "*"
+          },
+          {
+            "name": "src_country",
+            "value": "*"
+          },
+          {
+            "name": "filter_vpc",
+            "value": "*"
+          },
+          {
+            "name": "flag_label",
+            "value": "*"
+          },
+          {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
+            "name": "min_bytes",
+            "value": "100"
+          }
+        ],
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter srcaddr not in (null, \"\")\n| iploc srcaddr loc_country\n| filter loc_country not in (null, \"\")\n| filter loc_country in ($src_country)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by loc_country\n| sort desc Flows\n| limit 20\n| view graph type = pie subtype = full xaxis = loc_country yaxis = Flows",
+        "time_frame": {
+          "relativeTime": 86400000
+        },
+        "viewOptions": {
+          "type": "pie",
+          "commands": [
+            {
+              "command": {
+                "op": "=",
+                "name": "subtype",
+                "value": "full"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "xaxis",
+                "value": "loc_country"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "yaxis",
+                "value": "Flows"
+              }
+            }
+          ]
+        },
+        "drilldown_config": {
+          "actionData": [
+            {
+              "param": "src_country",
+              "value": "$x_axis.value"
+            }
+          ],
+          "actionType": "in_dashboard_drilldown"
+        },
+        "gridRawStorageInfo": {
+          "sort": null,
+          "coldefs": {},
+          "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+          "columnWidth": "\"stretch\""
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": [
+          "amazon_aws_raw"
+        ],
+        "query_uses_library": false
+      },
+      "creator_mail": "",
+      "is_public": false,
+      "is_predefined": false
+    },
+    {
+      "widget_key": "xql_cf_v4_013",
+      "title": "Cloud Metadata & Link-Local Traffic",
+      "creation_time": 1777623034465,
+      "description": "Traffic to/from link-local 169.254.0.0/16 range including IMDS (169.254.169.254)",
+      "data": {
+        "params": [
+          {
+            "name": "src_ip",
+            "value": "*"
+          },
+          {
+            "name": "dst_ip",
+            "value": "*"
+          },
+          {
+            "name": "action",
+            "value": "ACCEPT"
+          },
+          {
+            "name": "region",
+            "value": "*"
+          },
+          {
+            "name": "dstport",
+            "value": "*"
+          },
+          {
+            "name": "protocol",
+            "value": "*"
+          },
+          {
+            "name": "dst_country",
+            "value": "*"
+          },
+          {
+            "name": "src_country",
+            "value": "*"
+          },
+          {
+            "name": "filter_vpc",
+            "value": "*"
+          },
+          {
+            "name": "flag_label",
+            "value": "*"
+          },
+          {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
+            "name": "min_bytes",
+            "value": "100"
+          }
+        ],
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter dstaddr incidr \"169.254.0.0/16\"\n      or pkt_dstaddr incidr \"169.254.0.0/16\"\n      or srcaddr incidr \"169.254.0.0/16\"\n      or pkt_srcaddr incidr \"169.254.0.0/16\"\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(protocol = 6, \"TCP\", protocol = 17, \"UDP\", protocol = 1, \"ICMP\", concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| fields _time, src_ip, dst_ip, srcport, dstport, proto_name, action, bytes, packets, instance_id, vpc_id, region, account_id, log_status\n| sort desc _time\n| limit 500",
+        "time_frame": {
+          "relativeTime": 86400000
+        },
+        "viewOptions": {
+          "type": "table"
+        },
+        "gridRawStorageInfo": {
+          "sort": null,
+          "coldefs": {},
+          "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+          "columnWidth": "\"stretch\""
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": [
+          "amazon_aws_raw"
+        ],
+        "query_uses_library": false
+      },
+      "creator_mail": "",
+      "is_public": false,
+      "is_predefined": false
+    },
+    {
+      "widget_key": "xql_cf_v4_008",
+      "title": "Traffic by Destination Country (AWS)",
+      "creation_time": 1777623036457,
+      "description": "Destination IP geo-lookup for AWS flows \u2014 identify unusual country destinations",
+      "data": {
+        "params": [
+          {
+            "name": "src_ip",
+            "value": "*"
+          },
+          {
+            "name": "dst_ip",
+            "value": "*"
+          },
+          {
+            "name": "action",
+            "value": "ACCEPT"
+          },
+          {
+            "name": "region",
+            "value": "*"
+          },
+          {
+            "name": "dstport",
+            "value": "*"
+          },
+          {
+            "name": "protocol",
+            "value": "*"
+          },
+          {
+            "name": "dst_country",
+            "value": "*"
+          },
+          {
+            "name": "src_country",
+            "value": "*"
+          },
+          {
+            "name": "filter_vpc",
+            "value": "*"
+          },
+          {
+            "name": "flag_label",
+            "value": "*"
+          },
+          {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
+            "name": "min_bytes",
+            "value": "100"
+          }
+        ],
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter dstaddr not in (null, \"\")\n| iploc dstaddr loc_country\n| filter loc_country not in (null, \"\")\n| filter loc_country in ($dst_country)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by loc_country\n| sort desc Flows\n| limit 20\n| view graph type = pie subtype = full xaxis = loc_country yaxis = Flows",
+        "time_frame": {
+          "relativeTime": 86400000
+        },
+        "viewOptions": {
+          "type": "pie",
+          "commands": [
+            {
+              "command": {
+                "op": "=",
+                "name": "subtype",
+                "value": "full"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "xaxis",
+                "value": "loc_country"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "yaxis",
+                "value": "Flows"
+              }
+            }
+          ]
+        },
+        "drilldown_config": {
+          "actionData": [
+            {
+              "param": "dst_country",
+              "value": "$x_axis.value"
+            }
+          ],
+          "actionType": "in_dashboard_drilldown"
+        },
+        "gridRawStorageInfo": {
+          "sort": null,
+          "coldefs": {},
+          "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+          "columnWidth": "\"stretch\""
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": [
+          "amazon_aws_raw"
+        ],
+        "query_uses_library": false
+      },
+      "creator_mail": "",
+      "is_public": false,
+      "is_predefined": false
+    },
+    {
+      "widget_key": "xql_cf_v4_004",
+      "title": "Top Source IPs by Bytes",
+      "creation_time": 1777623032917,
+      "description": "Top 20 source IPs ranked by total bytes transferred \u2014 use to spot data-heavy talkers",
+      "data": {
+        "params": [
+          {
+            "name": "src_ip",
+            "value": "*"
+          },
+          {
+            "name": "dst_ip",
+            "value": "*"
+          },
+          {
+            "name": "action",
+            "value": "ACCEPT"
+          },
+          {
+            "name": "region",
+            "value": "*"
+          },
+          {
+            "name": "dstport",
+            "value": "*"
+          },
+          {
+            "name": "protocol",
+            "value": "*"
+          },
+          {
+            "name": "dst_country",
+            "value": "*"
+          },
+          {
+            "name": "src_country",
+            "value": "*"
+          },
+          {
+            "name": "filter_vpc",
+            "value": "*"
+          },
+          {
+            "name": "flag_label",
+            "value": "*"
+          },
+          {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
+            "name": "min_bytes",
+            "value": "100"
+          }
+        ],
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter src_ip not in (null, \"\")\n| comp sum(to_number(bytes)) as Total_Bytes, count() as Flows by src_ip\n| sort desc Total_Bytes\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = src_ip yaxis = Total_Bytes",
+        "time_frame": {
+          "relativeTime": 86400000
+        },
+        "viewOptions": {
+          "type": "column",
+          "commands": [
+            {
+              "command": {
+                "op": "=",
+                "name": "subtype",
+                "value": "grouped"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "layout",
+                "value": "horizontal"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "xaxis",
+                "value": "src_ip"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "yaxis",
+                "value": "Total_Bytes"
+              }
+            }
+          ]
+        },
+        "drilldown_config": {
+          "actionData": [
+            {
+              "param": "src_ip",
+              "value": "$x_axis.value"
+            }
+          ],
+          "actionType": "in_dashboard_drilldown"
+        },
+        "gridRawStorageInfo": {
+          "sort": null,
+          "coldefs": {},
+          "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+          "columnWidth": "\"stretch\""
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": [
+          "amazon_aws_raw"
+        ],
+        "query_uses_library": false
+      },
+      "creator_mail": "",
+      "is_public": false,
+      "is_predefined": false
+    },
+    {
+      "widget_key": "xql_cf_v4_016",
+      "title": "Top 20 Flows by Volume (7D)",
+      "creation_time": 1777623037694,
+      "description": "Top 10 src\u2192dst flows ranked by total bytes over 7 days",
+      "data": {
+        "params": [
+          {
+            "name": "src_ip",
+            "value": "*"
+          },
+          {
+            "name": "dst_ip",
+            "value": "*"
+          },
+          {
+            "name": "action",
+            "value": "ACCEPT"
+          },
+          {
+            "name": "region",
+            "value": "*"
+          },
+          {
+            "name": "dstport",
+            "value": "*"
+          },
+          {
+            "name": "protocol",
+            "value": "*"
+          },
+          {
+            "name": "dst_country",
+            "value": "*"
+          },
+          {
+            "name": "src_country",
+            "value": "*"
+          },
+          {
+            "name": "filter_vpc",
+            "value": "*"
+          },
+          {
+            "name": "flag_label",
+            "value": "*"
+          },
+          {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
+            "name": "min_bytes",
+            "value": "100"
+          }
+        ],
+        "phrase": "config timeframe = 7d\n| dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp sum(total_bytes) as Total_Bytes, count() as Flows, values(action) as Actions by src_ip, dst_ip, srcport, proto_name\n| sort desc Total_Bytes\n| limit 20",
+        "time_frame": {
+          "relativeTime": 86400000
+        },
+        "viewOptions": {
+          "type": "table"
+        },
+        "gridRawStorageInfo": {
+          "sort": null,
+          "coldefs": {},
+          "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+          "columnWidth": "\"stretch\""
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": [
+          "amazon_aws_raw"
+        ],
+        "query_uses_library": false
+      },
+      "creator_mail": "",
+      "is_public": false,
+      "is_predefined": false
+    },
+    {
+      "widget_key": "xql_cf_v4_012",
+      "title": "AWS TCP Flag Combinations",
+      "creation_time": 1777623030902,
+      "description": "TCP flag bitmask analysis \u2014 SYN-only floods, RST storms, SYN-ACK anomalies indicate scanning or attacks (AWS only)",
+      "data": {
+        "params": [
+          {
+            "name": "src_ip",
+            "value": "*"
+          },
+          {
+            "name": "dst_ip",
+            "value": "*"
+          },
+          {
+            "name": "action",
+            "value": "ACCEPT"
+          },
+          {
+            "name": "region",
+            "value": "*"
+          },
+          {
+            "name": "dstport",
+            "value": "*"
+          },
+          {
+            "name": "protocol",
+            "value": "*"
+          },
+          {
+            "name": "dst_country",
+            "value": "*"
+          },
+          {
+            "name": "src_country",
+            "value": "*"
+          },
+          {
+            "name": "filter_vpc",
+            "value": "*"
+          },
+          {
+            "name": "flag_label",
+            "value": "*"
+          },
+          {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
+            "name": "min_bytes",
+            "value": "100"
+          }
+        ],
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter protocol = 6\n| filter action in ($action)\n| filter region in ($region)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| filter tcp_flags != null\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows by flag_label\n| sort desc Flows\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = flag_label yaxis = Flows",
+        "time_frame": {
+          "relativeTime": 86400000
+        },
+        "viewOptions": {
+          "type": "column",
+          "commands": [
+            {
+              "command": {
+                "op": "=",
+                "name": "subtype",
+                "value": "grouped"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "layout",
+                "value": "horizontal"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "xaxis",
+                "value": "flag_label"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "yaxis",
+                "value": "Flows"
+              }
+            }
+          ]
+        },
+        "gridRawStorageInfo": {
+          "sort": null,
+          "coldefs": {},
+          "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+          "columnWidth": "\"stretch\""
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": [
+          "amazon_aws_raw"
+        ],
+        "query_uses_library": false
+      },
+      "creator_mail": "",
+      "is_public": false,
+      "is_predefined": false
+    },
+    {
+      "widget_key": "xql_cf_v4_006",
+      "title": "Top Destination Ports \u2014 AWS (Flow Count)",
+      "creation_time": 1777623035443,
+      "description": "Most-used destination ports from AWS VPC Flow Logs. Azure NSG flow logs do not expose destination port at this time.",
+      "data": {
+        "params": [
+          {
+            "name": "src_ip",
+            "value": "*"
+          },
+          {
+            "name": "dst_ip",
+            "value": "*"
+          },
+          {
+            "name": "action",
+            "value": "ACCEPT"
+          },
+          {
+            "name": "region",
+            "value": "*"
+          },
+          {
+            "name": "dstport",
+            "value": "*"
+          },
+          {
+            "name": "protocol",
+            "value": "*"
+          },
+          {
+            "name": "dst_country",
+            "value": "*"
+          },
+          {
+            "name": "src_country",
+            "value": "*"
+          },
+          {
+            "name": "filter_vpc",
+            "value": "*"
+          },
+          {
+            "name": "flag_label",
+            "value": "*"
+          },
+          {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
+            "name": "min_bytes",
+            "value": "100"
+          }
+        ],
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| filter dstport != null\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by dstport_str, proto_name\n| sort desc Flows\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = dstport_str yaxis = Flows",
+        "time_frame": {
+          "relativeTime": 86400000
+        },
+        "viewOptions": {
+          "type": "column",
+          "commands": [
+            {
+              "command": {
+                "op": "=",
+                "name": "subtype",
+                "value": "grouped"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "layout",
+                "value": "horizontal"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "xaxis",
+                "value": "dstport_str"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "yaxis",
+                "value": "Flows"
+              }
+            }
+          ]
+        },
+        "drilldown_config": {
+          "actionData": [
+            {
+              "param": "dstport",
+              "value": "$x_axis.value"
+            }
+          ],
+          "actionType": "in_dashboard_drilldown"
+        },
+        "gridRawStorageInfo": {
+          "sort": null,
+          "coldefs": {},
+          "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+          "columnWidth": "\"stretch\""
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": [
+          "amazon_aws_raw"
+        ],
+        "query_uses_library": false
+      },
+      "creator_mail": "",
+      "is_public": false,
+      "is_predefined": false
+    },
+    {
+      "widget_key": "xql_cf_v4_001",
+      "title": "AWS Traffic Volume by Region",
+      "creation_time": 1777623032246,
+      "description": "Total bytes transferred per AWS region. XQL does not support live dataset union \u2014 run the Azure equivalent (W11) separately for cross-cloud comparison.",
+      "data": {
+        "params": [
+          {
+            "name": "src_ip",
+            "value": "*"
+          },
+          {
+            "name": "dst_ip",
+            "value": "*"
+          },
+          {
+            "name": "action",
+            "value": "ACCEPT"
+          },
+          {
+            "name": "region",
+            "value": "*"
+          },
+          {
+            "name": "dstport",
+            "value": "*"
+          },
+          {
+            "name": "protocol",
+            "value": "*"
+          },
+          {
+            "name": "dst_country",
+            "value": "*"
+          },
+          {
+            "name": "src_country",
+            "value": "*"
+          },
+          {
+            "name": "filter_vpc",
+            "value": "*"
+          },
+          {
+            "name": "flag_label",
+            "value": "*"
+          },
+          {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
+            "name": "min_bytes",
+            "value": "100"
+          }
+        ],
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| filter region not in (null, \"\")\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp sum(total_bytes) as Total_Bytes, count() as Flows by region\n| sort desc Total_Bytes\n| limit 20\n| view graph type = pie subtype = full xaxis = region yaxis = Total_Bytes",
+        "time_frame": {
+          "relativeTime": 86400000
+        },
+        "viewOptions": {
+          "type": "pie",
+          "commands": [
+            {
+              "command": {
+                "op": "=",
+                "name": "subtype",
+                "value": "full"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "xaxis",
+                "value": "region"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "yaxis",
+                "value": "Total_Bytes"
+              }
+            }
+          ]
+        },
+        "gridRawStorageInfo": {
+          "sort": null,
+          "coldefs": {},
+          "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+          "columnWidth": "\"stretch\""
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": [
+          "amazon_aws_raw"
+        ],
+        "query_uses_library": false
+      },
+      "creator_mail": "",
+      "is_public": false,
+      "is_predefined": false
+    },
+    {
+      "widget_key": "xql_cf_v4_014",
+      "title": "AWS Full Flow Details (Top by Bytes)",
+      "creation_time": 1777623036839,
+      "description": "Full AWS VPC flow log rows sorted by bytes \u2014 enriched with geo-location for investigation",
+      "data": {
+        "params": [
+          {
+            "name": "src_ip",
+            "value": "*"
+          },
+          {
+            "name": "dst_ip",
+            "value": "*"
+          },
+          {
+            "name": "action",
+            "value": "ACCEPT"
+          },
+          {
+            "name": "region",
+            "value": "*"
+          },
+          {
+            "name": "dstport",
+            "value": "*"
+          },
+          {
+            "name": "protocol",
+            "value": "*"
+          },
+          {
+            "name": "dst_country",
+            "value": "*"
+          },
+          {
+            "name": "src_country",
+            "value": "*"
+          },
+          {
+            "name": "filter_vpc",
+            "value": "*"
+          },
+          {
+            "name": "flag_label",
+            "value": "*"
+          },
+          {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
+            "name": "min_bytes",
+            "value": "100"
+          }
+        ],
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| fields _time, src_ip, dst_ip, srcport, dstport, proto_name, action, total_bytes, packets, flag_label, instance_id, vpc_id, subnet_id, region, account_id, log_status\n| sort desc total_bytes\n| limit 500",
+        "time_frame": {
+          "relativeTime": 86400000
+        },
+        "viewOptions": {
+          "type": "table"
+        },
+        "gridRawStorageInfo": {
+          "sort": null,
+          "coldefs": {},
+          "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+          "columnWidth": "\"stretch\""
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": [
+          "amazon_aws_raw"
+        ],
+        "query_uses_library": false
+      },
+      "creator_mail": "",
+      "is_public": false,
+      "is_predefined": false
+    },
+    {
+      "widget_key": "xql_cf_v4_007",
+      "title": "AWS Traffic by VPC",
+      "creation_time": 1777623034073,
+      "description": "Flow count by VPC ID",
+      "data": {
+        "params": [
+          {
+            "name": "src_ip",
+            "value": "*"
+          },
+          {
+            "name": "dst_ip",
+            "value": "*"
+          },
+          {
+            "name": "action",
+            "value": "ACCEPT"
+          },
+          {
+            "name": "region",
+            "value": "*"
+          },
+          {
+            "name": "dstport",
+            "value": "*"
+          },
+          {
+            "name": "protocol",
+            "value": "*"
+          },
+          {
+            "name": "dst_country",
+            "value": "*"
+          },
+          {
+            "name": "src_country",
+            "value": "*"
+          },
+          {
+            "name": "filter_vpc",
+            "value": "*"
+          },
+          {
+            "name": "flag_label",
+            "value": "*"
+          },
+          {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
+            "name": "min_bytes",
+            "value": "100"
+          }
+        ],
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter vpc_id not in (null, \"\")\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by vpc_id\n| sort desc Flows\n| limit 20\n| view graph type = pie subtype = full xaxis = vpc_id yaxis = Flows",
+        "time_frame": {
+          "relativeTime": 86400000
+        },
+        "viewOptions": {
+          "type": "pie",
+          "commands": [
+            {
+              "command": {
+                "op": "=",
+                "name": "subtype",
+                "value": "full"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "xaxis",
+                "value": "vpc_id"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "yaxis",
+                "value": "Flows"
+              }
+            }
+          ]
+        },
+        "drilldown_config": {
+          "actionData": [
+            {
+              "param": "filter_vpc",
+              "value": "$x_axis.value"
+            }
+          ],
+          "actionType": "in_dashboard_drilldown"
+        },
+        "gridRawStorageInfo": {
+          "sort": null,
+          "coldefs": {},
+          "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+          "columnWidth": "\"stretch\""
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": [
+          "amazon_aws_raw"
+        ],
+        "query_uses_library": false
+      },
+      "creator_mail": "",
+      "is_public": false,
+      "is_predefined": false
+    },
+    {
+      "widget_key": "xql_cf_v4_009",
+      "title": "AWS Hourly Traffic Volume Trend (7D)",
+      "creation_time": 1777623033393,
+      "description": "Hourly bytes over 7 days split by action (ACCEPT/REJECT) \u2014 detect traffic spikes, off-hours exfiltration, or sudden REJECT surges.",
+      "data": {
+        "params": [
+          {
+            "name": "src_ip",
+            "value": "*"
+          },
+          {
+            "name": "dst_ip",
+            "value": "*"
+          },
+          {
+            "name": "action",
+            "value": "ACCEPT"
+          },
+          {
+            "name": "region",
+            "value": "*"
+          },
+          {
+            "name": "dstport",
+            "value": "*"
+          },
+          {
+            "name": "protocol",
+            "value": "*"
+          },
+          {
+            "name": "dst_country",
+            "value": "*"
+          },
+          {
+            "name": "src_country",
+            "value": "*"
+          },
+          {
+            "name": "filter_vpc",
+            "value": "*"
+          },
+          {
+            "name": "flag_label",
+            "value": "*"
+          },
+          {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
+            "name": "min_bytes",
+            "value": "100"
+          }
+        ],
+        "phrase": "config timeframe = 7d\n| dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| alter hour_bucket = format_timestamp(\"%Y-%m-%d %H:00\", _time)\n| comp sum(total_bytes) as Total_Bytes, count() as Flows by hour_bucket\n| sort asc hour_bucket\n| view graph type = line xaxis = hour_bucket yaxis = Total_Bytes",
+        "time_frame": {
+          "relativeTime": 604800000
+        },
+        "viewOptions": {
+          "type": "line",
+          "commands": [
+            {
+              "command": {
+                "op": "=",
+                "name": "xaxis",
+                "value": "hour_bucket"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "yaxis",
+                "value": "Total_Bytes"
+              }
+            }
+          ]
+        },
+        "gridRawStorageInfo": {
+          "sort": null,
+          "coldefs": {},
+          "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+          "columnWidth": "\"stretch\""
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": [
+          "amazon_aws_raw"
+        ],
+        "query_uses_library": false
+      },
+      "creator_mail": "",
+      "is_public": false,
+      "is_predefined": false
+    },
+    {
+      "widget_key": "xql_cf_v4_010",
+      "title": "AWS Rejected Flows \u2014 Top Source IPs",
+      "creation_time": 1777623036011,
+      "description": "Sources generating the most REJECT-action flows \u2014 high counts may indicate port scans or misconfigured security groups",
+      "data": {
+        "params": [
+          {
+            "name": "src_ip",
+            "value": "*"
+          },
+          {
+            "name": "dst_ip",
+            "value": "*"
+          },
+          {
+            "name": "action",
+            "value": "ACCEPT"
+          },
+          {
+            "name": "region",
+            "value": "*"
+          },
+          {
+            "name": "dstport",
+            "value": "*"
+          },
+          {
+            "name": "protocol",
+            "value": "*"
+          },
+          {
+            "name": "dst_country",
+            "value": "*"
+          },
+          {
+            "name": "src_country",
+            "value": "*"
+          },
+          {
+            "name": "filter_vpc",
+            "value": "*"
+          },
+          {
+            "name": "flag_label",
+            "value": "*"
+          },
+          {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
+            "name": "min_bytes",
+            "value": "100"
+          }
+        ],
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action = \"REJECT\"\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as REJECTED_FLOWS, count_distinct(dstport) as UNIQUE_PORTS by src_ip\n| sort desc REJECTED_FLOWS\n| limit 25",
+        "time_frame": {
+          "relativeTime": 86400000
+        },
+        "viewOptions": {
+          "type": "table"
+        },
+        "drilldown_config": {
+          "actionData": [
+            {
+              "param": "src_ip",
+              "value": "$row.src_ip"
+            }
+          ],
+          "actionType": "in_dashboard_drilldown"
+        },
+        "gridRawStorageInfo": {
+          "sort": null,
+          "coldefs": {},
+          "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+          "columnWidth": "\"stretch\""
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": [
+          "amazon_aws_raw"
+        ],
+        "query_uses_library": false
+      },
+      "creator_mail": "",
+      "is_public": false,
+      "is_predefined": false
+    },
+    {
+      "widget_key": "xql_cf_v4_002",
+      "title": "AWS Flow Action Distribution (ACCEPT / REJECT)",
+      "creation_time": 1777623031789,
+      "description": "AWS VPC flow count by action \u2014 accepted vs rejected. High REJECT counts indicate security group blocks or port scans.",
+      "data": {
+        "params": [
+          {
+            "name": "src_ip",
+            "value": "*"
+          },
+          {
+            "name": "dst_ip",
+            "value": "*"
+          },
+          {
+            "name": "action",
+            "value": "ACCEPT"
+          },
+          {
+            "name": "region",
+            "value": "*"
+          },
+          {
+            "name": "dstport",
+            "value": "*"
+          },
+          {
+            "name": "protocol",
+            "value": "*"
+          },
+          {
+            "name": "dst_country",
+            "value": "*"
+          },
+          {
+            "name": "src_country",
+            "value": "*"
+          },
+          {
+            "name": "filter_vpc",
+            "value": "*"
+          },
+          {
+            "name": "flag_label",
+            "value": "*"
+          },
+          {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
+            "name": "min_bytes",
+            "value": "100"
+          }
+        ],
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by action\n| sort desc Flows\n| view graph type = column subtype = grouped layout = horizontal xaxis = action yaxis = Flows",
+        "time_frame": {
+          "relativeTime": 86400000
+        },
+        "viewOptions": {
+          "type": "column",
+          "commands": [
+            {
+              "command": {
+                "op": "=",
+                "name": "subtype",
+                "value": "grouped"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "layout",
+                "value": "horizontal"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "xaxis",
+                "value": "action"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "yaxis",
+                "value": "Flows"
+              }
+            }
+          ]
+        },
+        "gridRawStorageInfo": {
+          "sort": null,
+          "coldefs": {},
+          "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+          "columnWidth": "\"stretch\""
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": [
+          "amazon_aws_raw"
+        ],
+        "query_uses_library": false
+      },
+      "creator_mail": "",
+      "is_public": false,
+      "is_predefined": false
+    },
+    {
+      "widget_key": "xql_cf_v4_003",
+      "title": "AWS Protocol Distribution (All)",
+      "creation_time": 1777623037252,
+      "description": "Flow count by transport protocol from AWS VPC Flow Logs. Protocol field: 6=TCP, 17=UDP, 1=ICMP.",
+      "data": {
+        "params": [
+          {
+            "name": "src_ip",
+            "value": "*"
+          },
+          {
+            "name": "dst_ip",
+            "value": "*"
+          },
+          {
+            "name": "action",
+            "value": "ACCEPT"
+          },
+          {
+            "name": "region",
+            "value": "*"
+          },
+          {
+            "name": "dstport",
+            "value": "*"
+          },
+          {
+            "name": "protocol",
+            "value": "*"
+          },
+          {
+            "name": "dst_country",
+            "value": "*"
+          },
+          {
+            "name": "src_country",
+            "value": "*"
+          },
+          {
+            "name": "filter_vpc",
+            "value": "*"
+          },
+          {
+            "name": "flag_label",
+            "value": "*"
+          },
+          {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
+            "name": "min_bytes",
+            "value": "100"
+          }
+        ],
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows by proto_name\n| sort desc Flows\n| view graph type = pie subtype = full xaxis = proto_name yaxis = Flows",
+        "time_frame": {
+          "relativeTime": 86400000
+        },
+        "viewOptions": {
+          "type": "pie",
+          "commands": [
+            {
+              "command": {
+                "op": "=",
+                "name": "subtype",
+                "value": "full"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "xaxis",
+                "value": "proto_name"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "yaxis",
+                "value": "Flows"
+              }
+            }
+          ]
+        },
+        "gridRawStorageInfo": {
+          "sort": null,
+          "coldefs": {},
+          "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+          "columnWidth": "\"stretch\""
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": [
+          "amazon_aws_raw"
+        ],
+        "query_uses_library": false
+      },
+      "creator_mail": "",
+      "is_public": false,
+      "is_predefined": false
+    },
+    {
+      "widget_key": "xql_cf_v4_005",
+      "title": "Top Destination IPs by Bytes",
+      "creation_time": 1777623034901,
+      "description": "Top 20 destination IPs ranked by total bytes received \u2014 identify heavy egress targets",
+      "data": {
+        "params": [
+          {
+            "name": "src_ip",
+            "value": "*"
+          },
+          {
+            "name": "dst_ip",
+            "value": "*"
+          },
+          {
+            "name": "action",
+            "value": "ACCEPT"
+          },
+          {
+            "name": "region",
+            "value": "*"
+          },
+          {
+            "name": "dstport",
+            "value": "*"
+          },
+          {
+            "name": "protocol",
+            "value": "*"
+          },
+          {
+            "name": "dst_country",
+            "value": "*"
+          },
+          {
+            "name": "src_country",
+            "value": "*"
+          },
+          {
+            "name": "filter_vpc",
+            "value": "*"
+          },
+          {
+            "name": "flag_label",
+            "value": "*"
+          },
+          {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
+            "name": "min_bytes",
+            "value": "100"
+          }
+        ],
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter dst_ip not in (null, \"\")\n| comp sum(to_number(bytes)) as Total_Bytes, count() as Flows by dst_ip\n| sort desc Total_Bytes\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = dst_ip yaxis = Total_Bytes",
+        "time_frame": {
+          "relativeTime": 86400000
+        },
+        "viewOptions": {
+          "type": "column",
+          "commands": [
+            {
+              "command": {
+                "op": "=",
+                "name": "subtype",
+                "value": "grouped"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "layout",
+                "value": "horizontal"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "xaxis",
+                "value": "dst_ip"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "yaxis",
+                "value": "Total_Bytes"
+              }
+            }
+          ]
+        },
+        "drilldown_config": {
+          "actionData": [
+            {
+              "param": "dst_ip",
+              "value": "$x_axis.value"
+            }
+          ],
+          "actionType": "in_dashboard_drilldown"
+        },
+        "gridRawStorageInfo": {
+          "sort": null,
+          "coldefs": {},
+          "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+          "columnWidth": "\"stretch\""
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": [
+          "amazon_aws_raw"
+        ],
+        "query_uses_library": false
+      },
+      "creator_mail": "",
+      "is_public": false,
+      "is_predefined": false
+    },
+    {
+      "widget_key": "xql_cf_v4_019",
+      "title": "Flows by Account ID",
+      "creation_time": 1777623033246,
+      "description": "Flow count distribution across AWS Account IDs \u2014 click a slice to drill down by account",
+      "data": {
+        "params": [
+          {
+            "name": "src_ip",
+            "value": "*"
+          },
+          {
+            "name": "dst_ip",
+            "value": "*"
+          },
+          {
+            "name": "action",
+            "value": "ACCEPT"
+          },
+          {
+            "name": "region",
+            "value": "*"
+          },
+          {
+            "name": "dstport",
+            "value": "*"
+          },
+          {
+            "name": "protocol",
+            "value": "*"
+          },
+          {
+            "name": "dst_country",
+            "value": "*"
+          },
+          {
+            "name": "src_country",
+            "value": "*"
+          },
+          {
+            "name": "filter_vpc",
+            "value": "*"
+          },
+          {
+            "name": "flag_label",
+            "value": "*"
+          },
+          {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
+            "name": "min_bytes",
+            "value": "100"
+          }
+        ],
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| alter account_id_str = to_string(account_id)\n| comp count() as Flows, sum(total_bytes) as Total_Bytes by account_id_str\n| sort desc Flows\n| limit 20\n| view graph type = pie subtype = full xaxis = account_id_str yaxis = Flows",
+        "time_frame": {
+          "relativeTime": 86400000
+        },
+        "viewOptions": {
+          "type": "pie",
+          "commands": [
+            {
+              "command": {
+                "op": "=",
+                "name": "subtype",
+                "value": "full"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "xaxis",
+                "value": "account_id_str"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "yaxis",
+                "value": "Flows"
+              }
+            }
+          ]
+        },
+        "drilldown_config": {
+          "actionData": [
+            {
+              "param": "filter_account",
+              "value": "$x_axis.value"
+            }
+          ],
+          "actionType": "in_dashboard_drilldown"
+        },
+        "gridRawStorageInfo": {
+          "sort": null,
+          "coldefs": {},
+          "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+          "columnWidth": "\"stretch\""
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": [
+          "amazon_aws_raw"
+        ],
+        "query_uses_library": false
+      },
+      "creator_mail": "",
+      "is_public": false,
+      "is_predefined": false
+    }
+  ],
+  "id": "cloud_flow_logs_v4",
+  "name": "CORTEX - [AWS VPC Network Flows Analysis]"
+}

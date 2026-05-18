@@ -1,0 +1,259 @@
+commonfields:
+  id: ac0573ba-c705-4acd-812e-7d92a41ff0f3
+  version: 11
+vcShouldKeepItemLegacyProdMachine: false
+name: group_names_mapping
+script: |-
+  import requests
+  import json
+  import traceback
+  import time
+
+  # =============================================================================
+  # CONFIGURATION
+  # =============================================================================
+  TARGET_DATASET = "group_names_mapping"
+
+  # =============================================================================
+  # ASSET GROUP HELPERS
+  # =============================================================================
+  def fetch_asset_group_map(fqdn: str, api_key_id: str, api_key: str) -> dict:
+      """Fetches asset groups from Cortex API synchronously and returns a mapping of ID to Name."""
+      url = f'https://api-{fqdn}/public_api/v1/asset-groups'
+      headers = {
+          'x-xdr-auth-id': api_key_id,
+          'Authorization': api_key,
+          'Content-Type': 'application/json',
+      }
+
+      group_map = {}
+      page_size = 1000
+      search_from = 0
+      total_count = None
+
+      try:
+          while True:
+              time.sleep(1.5)
+
+              payload = {
+                  "request_data": {
+                      "filters": {},
+                      "sort": [{"FIELD": "XDM.ASSET_GROUP.LAST_UPDATE_TIME", "ORDER": "DESC"}],
+                      "search_from": search_from,
+                      "search_to": search_from + page_size
+                  }
+              }
+
+              response = requests.post(url, json=payload, headers=headers)
+
+              if response.status_code == 429:
+                  demisto.info("Rate limited on Asset Groups! Backing off for 5 seconds...")
+                  time.sleep(5)
+                  continue
+
+              response.raise_for_status()
+              data = response.json()
+
+              reply = data.get('reply', {})
+              groups = reply.get('data', [])
+
+              if total_count is None:
+                  total_count = reply.get('total_count') or reply.get('metadata', {}).get('total_count', 0)
+                  demisto.info(f"Asset groups: {total_count} total, fetching in pages of {page_size}...")
+
+              if not groups:
+                  break
+
+              for group in groups:
+                  gid = group.get('XDM.ASSET_GROUP.ID')
+                  gname = group.get('XDM.ASSET_GROUP.NAME', '')
+                  if gid is not None:
+                      group_map[gid] = gname
+
+              search_from += len(groups)
+              demisto.info(f"Asset groups: fetched {search_from}/{total_count}")
+
+              if search_from >= total_count or len(groups) < page_size:
+                  break
+
+          demisto.info(f"Loaded {len(group_map)} asset groups.")
+
+      except Exception as e:
+          demisto.error(f"Failed to fetch asset groups: {e}")
+
+      return group_map
+
+
+  # =============================================================================
+  # DATASET CREATION HELPER
+  # =============================================================================
+  def ensure_lookup_dataset(dataset_name: str, fqdn: str, api_key_id: str, api_key: str):
+      """Attempts to create the lookup dataset schema. Properly catches Cortex internal errors."""
+      create_url = f'https://api-{fqdn}/public_api/v1/xql/add_dataset'
+      headers = {
+          'x-xdr-auth-id': api_key_id,
+          'Authorization': api_key,
+          'Content-Type': 'application/json',
+      }
+
+      payload = {
+          "request_data": {
+              "dataset_name": dataset_name,
+              "dataset_type": "lookup",
+              "dataset_schema": {
+                  "group_id": "text",
+                  "group_names": "text"
+              }
+          }
+      }
+
+      demisto.info(f"Ensuring dataset '{dataset_name}' exists...")
+      response = requests.post(create_url, json=payload, headers=headers)
+
+      # 1. Check for standard HTTP-level errors
+      if not response.ok:
+          error_text = response.text.lower()
+          if "already exists" in error_text:
+              demisto.info(f"Dataset '{dataset_name}' already exists. Proceeding to insert phase.")
+              return
+          raise RuntimeError(f"HTTP Error creating dataset: {response.text}")
+
+      # 2. Check for Cortex-specific internal JSON errors (The hidden 400s)
+      try:
+          result = response.json()
+
+          # If the API replies with an internal error code
+          if "reply" in result and isinstance(result["reply"], dict) and result["reply"].get("err_code"):
+              err_msg = result["reply"].get("err_msg", "")
+              err_extra = result["reply"].get("err_extra", "")
+
+              # If the error is just telling us it already exists, safely ignore it
+              if "already exists" in err_msg.lower() or "already exists" in err_extra.lower():
+                  demisto.info(f"Dataset '{dataset_name}' already exists (Caught via JSON). Proceeding.")
+                  return
+
+              # Otherwise, crash the script and show the REAL reason the creation is failing
+              raise RuntimeError(f"Cortex Backend Error creating dataset: {err_msg} | {err_extra}")
+
+      except ValueError:
+          pass # Not a JSON response, safely ignore
+
+      demisto.info(f"Dataset '{dataset_name}' successfully created! Pausing 30 seconds for backend to initialize schema...")
+      time.sleep(30)
+
+  # =============================================================================
+  # DATA INGESTION HELPER
+  # =============================================================================
+  def push_to_xdr_dataset(group_map: dict, dataset_name: str, fqdn: str, api_key_id: str, api_key: str):
+      """Formats the group_map and pushes it to a Cortex XDR lookup dataset synchronously."""
+      if not group_map:
+          return "No data to push."
+
+      formatted_data = [
+          {"group_id": str(k), "group_names": str(v)} for k, v in group_map.items()
+      ]
+
+      insert_url = f'https://api-{fqdn}/public_api/v1/xql/lookups/add_data'
+      headers = {
+          'x-xdr-auth-id': api_key_id,
+          'Authorization': api_key,
+          'Content-Type': 'application/json',
+      }
+
+      aggregated_results = {"added": 0, "updated": 0, "skipped": 0}
+      chunk_size = 1000
+
+      try:
+          for i in range(0, len(formatted_data), chunk_size):
+              chunk = formatted_data[i:i + chunk_size]
+
+              payload = {
+                  "request_data": {
+                      "dataset_name": dataset_name,
+                      "key_fields": ["group_id"],
+                      "data": chunk
+                  }
+              }
+
+              demisto.info(f"Pushing chunk of {len(chunk)} records to lookup dataset '{dataset_name}'...")
+              response = requests.post(insert_url, json=payload, headers=headers)
+              response.raise_for_status()
+
+              result = response.json()
+              data_metrics = result.get("reply", result)
+
+              aggregated_results["added"] += data_metrics.get("added", 0)
+              aggregated_results["updated"] += data_metrics.get("updated", 0)
+              aggregated_results["skipped"] += data_metrics.get("skipped", 0)
+
+              if i + chunk_size < len(formatted_data):
+                  demisto.info("Sleeping for 10 seconds to respect XQL Lookup API rate limits...")
+                  time.sleep(10)
+
+          return aggregated_results
+
+      except Exception as e:
+          file_result = fileResult(f"{dataset_name}_fallback.json", json.dumps(formatted_data, indent=4).encode('utf-8'))
+          demisto.results(file_result)
+
+          error_details = response.text if 'response' in locals() else str(e)
+          raise RuntimeError(f"Lookup dataset insertion failed! HTTP Error: {e} | Details: {error_details}")
+
+
+  # =============================================================================
+  # MAIN EXECUTION
+  # =============================================================================
+  def main():
+      try:
+          args = demisto.args()
+
+          cortex_fqdn = args.get('cortex_cloud_fqdn')
+          cortex_api_key_id = args.get('cortex_api_key_id')
+          cortex_api_key = args.get('cortex_api_key')
+
+          if not cortex_fqdn or not cortex_api_key_id or not cortex_api_key:
+              return_error("Missing FQDN, API Key ID, or API Key in script arguments.")
+
+          # 1. Fetch the raw mappings
+          group_map = fetch_asset_group_map(cortex_fqdn, cortex_api_key_id, cortex_api_key)
+
+          # 2. Ensure the lookup dataset schema exists (Creates it if missing)
+          ensure_lookup_dataset(TARGET_DATASET, cortex_fqdn, cortex_api_key_id, cortex_api_key)
+
+          # 3. Push the transformed mappings into the dataset
+          api_reply = push_to_xdr_dataset(group_map, TARGET_DATASET, cortex_fqdn, cortex_api_key_id, cortex_api_key)
+
+          # Return final status to the War Room
+          return_results(CommandResults(
+              readable_output=f"Successfully processed {len(group_map)} Asset Group mappings for dataset: `{TARGET_DATASET}`.\n\n**Cortex API Ingestion Metrics:**\n```json\n{json.dumps(api_reply, indent=4)}\n```"
+          ))
+
+      except Exception as e:
+          return_error(f'Script failed during execution: {e}\n{traceback.format_exc()}')
+
+  if __name__ in ('__main__', '__builtin__', 'builtins'):
+      main()
+type: python
+tags: []
+enabled: true
+args:
+- supportedModules: []
+  name: cortex_cloud_fqdn
+  defaultValue: .paloaltonetworks.com
+- supportedModules: []
+  name: cortex_api_key_id
+  required: true
+- supportedModules: []
+  name: cortex_api_key
+  required: true
+  secret: true
+scripttarget: 0
+subtype: python3
+pswd: ""
+runonce: false
+dockerimage: demisto/python3:3.12.13.8160132
+runas: DBotWeakRole
+engineinfo: {}
+mainengineinfo: {}
+restrictioncenter: {}
+signature: ""

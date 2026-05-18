@@ -1,7 +1,7 @@
 {
   "dashboards_data": [
     {
-      "name": "CNAPP -  Cloud Health Ingestion/Scan Status",
+      "name": "CNAPP -  [Cloud Health Ingestion/Scan Status]",
       "description": "Highlights the most frequent Cloud Health auditing errors across providers, assets, regions, and error messages. Results join cloud_health_auditing with asset_inventory and support filtering by provider, realm, asset name, classification.",
       "status": "ENABLED",
       "layout": [
@@ -1646,5 +1646,5 @@
     }
   ],
   "id": "top_cloud_health_errors",
-  "name": "CNAPP -  Cloud Health Ingestion/Scan Status"
+  "name": "CNAPP -  [Cloud Health Ingestion/Scan Status]"
 }

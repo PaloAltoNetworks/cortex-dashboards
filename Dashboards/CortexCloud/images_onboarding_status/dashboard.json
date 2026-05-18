@@ -1,7 +1,7 @@
 {
   "dashboards_data": [
     {
-      "name": "CNAPP - Container/VM Image Protection/Scan Status",
+      "name": "CNAPP - [Container/VM Image Protection/Scan Status]",
       "description": "Status of discovered Images protection and scanning, VM Images, Container Image Registries, Repositories and Container Images",
       "status": "ENABLED",
       "layout": [
@@ -1708,5 +1708,5 @@
     }
   ],
   "id": "",
-  "name": "CNAPP - Container/VM Image Protection/Scan Status"
+  "name": "CNAPP - [Container/VM Image Protection/Scan Status]"
 }

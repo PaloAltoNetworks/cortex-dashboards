@@ -1,0 +1,388 @@
+{
+  "dashboards_data": [
+    {
+      "name": "CORTEX - [AppSec - Findings]",
+      "description": "CORTEX - [AppSec - Findings]",
+      "status": "ENABLED",
+      "layout": [
+        {
+          "id": "row-8220",
+          "data": [
+            {
+              "key": "xql_1773878857010",
+              "data": {
+                "type": "Custom XQL",
+                "width": 100,
+                "height": 1583,
+                "params": [
+                  {
+                    "name": "detection_method",
+                    "value": "*"
+                  },
+                  {
+                    "name": "repo_name",
+                    "value": "*"
+                  },
+                  {
+                    "name": "provider",
+                    "value": "*"
+                  },
+                  {
+                    "name": "org",
+                    "value": "*"
+                  },
+                  {
+                    "name": "category",
+                    "value": "*"
+                  },
+                  {
+                    "name": "type",
+                    "value": "*"
+                  },
+                  {
+                    "name": "severity",
+                    "value": "*"
+                  },
+                  {
+                    "name": "collaborator",
+                    "value": "*"
+                  }
+                ],
+                "phrase": "dataset = findings \n// | filter xdm.finding.asset_class = \"code\"\n| filter xdm.finding.owner  = \"CAS\"\n| alter detection_method = xdm.finding.extended_fields -> [\"detection_method\"]\n| alter repo_name = xdm.finding.normalized_fields -> [\"xdm.repository.name\"]\n| alter repo_project = xdm.finding.normalized_fields -> [\"xdm.repository.name\"]\n| alter repo_branch = xdm.finding.normalized_fields -> [\"xdm.code.git.branch\"]\n| alter provider = xdm.finding.normalized_fields -> [\"xdm.code.git.provider\"]\n| alter org = xdm.finding.normalized_fields -> [\"xdm.repository.organization\"]\n| filter detection_method IN ($detection_method)\n| filter repo_name IN ($repo_name)\n| filter provider IN ($provider)\n| filter org IN ($org)\n| filter xdm.finding.asset_category  IN ($category)\n| filter xdm.finding.asset_type IN ($type)\n// | filter detection_method != \"CAS_LICENSE_SCANNER\"\n// | filter detection_method != \"CAS_OPERATIONAL_RISK_SCANNER\"\n// | filter detection_method != \"CAS_CI_CD_RISK_SCANNER\"\n// | filter detection_method != \"CAS_IAC_SCANNER\"\n// | filter detection_method != \"CAS_SECRET_SCANNER\"\n// | filter detection_method != \"CAS_SAST_SCANNER\"\n// | filter detection_method != \"CAS_CVE_SCANNER\"\n// | filter provider = \"\"\n// | filter org = \"\"\n// | filter repo_name = \"\"\n\n// | alter domain = xdm.finding.extended_fields  -> [\"issue_data\"][\"domain\"]\n// | alter asset_provider = xdm.finding.extended_fields  -> [\"xdm__asset_provider\"]\n\n| alter file_name = xdm.finding.normalized_fields -> [\"xdm.file.path\"]\n| alter package_manager = xdm.finding.normalized_fields -> [\"xdm.software_package.package_manager\"]\n| alter language = xdm.finding.normalized_fields -> [\"xdm.software_package.language\"]\n| alter dependency = xdm.finding.normalized_fields -> [\"xdm.software_package.dependency_type\"]\n// | alter severity = xdm.finding.normalized_fields  -> [\"xdm.vulnerability.severity\"]\n| alter severity = xdm.finding.extended_fields  -> [\"issue_data\"][\"severity\"]\n| filter severity IN ($severity)\n| alter cve = xdm.finding.normalized_fields -> [\"xdm.vulnerability.cve_id\"]\n| alter exploitable = xdm.finding.extended_fields -> [\"is_kev\"]\n// | filter exploitable  IN ($exploitable)\n| alter cve_vendor_link = xdm.finding.normalized_fields -> [\"xdm.vulnerability.cve_vendor_link\"]\n| alter package_version = xdm.finding.extended_fields -> [\"package_version\"]\n// | alter fix = xdm.finding.extended_fields -> [\"is_fixable\"]\n| alter fix_versions = xdm.finding.normalized_fields -> [\"xdm.vulnerability.fix_versions\"]\n| alter cvss_score = xdm.finding.normalized_fields -> [\"xdm.vulnerability.cvss_score\"]\n| alter epss_score = xdm.finding.normalized_fields -> [\"xdm.vulnerability.epss_score\"]\n| alter fix_versions     = json_extract_scalar_array(xdm.finding.normalized_fields, \"$.\\\"xdm.vulnerability.fix_versions\\\"\")\n| alter cve_risk_factors = json_extract_scalar_array(xdm.finding.normalized_fields, \"$.\\\"xdm.vulnerability.cve_risk_factors\\\"\")\n| alter cve_fix_date = xdm.finding.normalized_fields -> [\"xdm.vulnerability.fix_date\"]\n| alter impact = xdm.finding.normalized_fields -> [\"xdm.impact\"]\n| alter remediation = xdm.finding.extended_fields -> [\"issue_data\"][\"remediation\"]\n| alter action = xdm.finding.extended_fields -> [\"issue_data_extended\"][\"action\"]\n| alter remediation = if(remediation = null or remediation = \"\", action, remediation)\n| alter collaborator = xdm.finding.normalized_fields  -> [\"xdm.code.git.commit.author.name\"]\n| filter collaborator IN ($collaborator)\n\n| alter rule_id = xdm.finding.normalized_fields -> [\"rule_id\"]\n| alter repository_id = xdm.finding.extended_fields -> [\"repository_id\"]\n| alter prioritization_labels = xdm.finding.extended_fields  -> [\"prioritization_labels\"]\n| alter license = xdm.finding.normalized_fields -> [\"xdm.license.name\"]\n| alter report_data_source = xdm.finding.extended_fields  -> [\"report_data_source\"]\n// | alter scan_type = xdm.finding.normalized_fields  -> [\"scan_type\"]\n| alter scan_type = xdm.finding.normalized_fields  -> [\"xdm.code.scan_source\"]\n| alter documentation_link = xdm.finding.extended_fields  -> [\"documentation_link\"]\n| alter last_commit = xdm.finding.normalized_fields -> [\"xdm.code.git.commit.time\"]\n| alter last_commit = format_timestamp(\"%Y-%m-%dT%H:%M:%SZ\", to_timestamp(to_integer(last_commit), \"MILLIS\"))\n| alter code_lines = concat(\n    to_string(xdm.finding.normalized_fields -> [\"xdm.file.position.start.line\"]),\n    \",\",\n    to_string(xdm.finding.normalized_fields -> [\"xdm.file.position.end.line\"])\n)\n// | fields severity, xdm.finding.owner as owner, detection_method, xdm.finding.asset_class  as class, xdm.finding.asset_category as category,  xdm.finding.asset_type as type,  scan_type, provider, org, repo_name, repo_branch, xdm.finding.asset_name as finding_asset_name, collaborator, file_name,  code_lines , xdm.finding.name as finding_name, xdm.finding.description as finding_description,  impact, remediation , rule_id, language, package_manager, dependency,  package_version,  fix_versions, cve, cve_fix_date , exploitable ,cvss_score, epss_score , cve_risk_factors , license, report_data_source, prioritization_labels , documentation_link, cve_vendor_link, last_commit, xdm.finding.last_observed  as last_observed, repository_id\n| fields severity, xdm.finding.owner as owner, detection_method, xdm.finding.asset_class  as class, xdm.finding.asset_category as category,  xdm.finding.asset_type as type,  scan_type, provider, org, repo_name, repo_branch, xdm.finding.asset_name as finding_asset_name, collaborator, file_name,  code_lines , xdm.finding.name as finding_name, xdm.finding.description as finding_description,  impact, remediation , rule_id, language, package_manager, dependency,  package_version,  fix_versions, cve, cve_fix_date , exploitable ,cvss_score, epss_score , cve_risk_factors , license, report_data_source, prioritization_labels , documentation_link, cve_vendor_link, last_commit, xdm.finding.last_observed  as last_observed, repository_id, xdm.finding.normalized_fields , xdm.finding.extended_fields\n| sort asc org, asc repo_name, asc detection_method\n\n| filter (provider contains \"\"\"azure\"\"\") ",
+                "entityType": "xql-widget-table-1fed90d2-e749-44d2-8f83-304e9aaca31f",
+                "time_frame": {
+                  "relativeTime": 86400000
+                },
+                "viewOptions": {
+                  "type": "table",
+                  "commands": []
+                },
+                "drilldown_config": {
+                  "actionData": {
+                    "url": "/assets/asset-layout/$row.repository_id",
+                    "openInNewTab": true
+                  },
+                  "actionType": "open_custom_url"
+                },
+                "gridRawStorageInfo": {
+                  "sort": null,
+                  "coldefs": {},
+                  "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                  "columnWidth": null
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "default_dashboard_id": 1,
+      "global_id": "e7a81b1473ff4a1181da7456c6245d72",
+      "metadata": {
+        "params": [
+          {
+            "name": "detection_method",
+            "type": "DYNAMIC",
+            "title": "detection_method",
+            "value": [],
+            "executionID": "61286c48eb5947_7295498_inv",
+            "valueOptions": [],
+            "investigation": {
+              "ttl": "0",
+              "timeframe": {
+                "relativeTime": 2592000000
+              },
+              "input_dict": {
+                "xql": "dataset = findings \n| filter xdm.finding.asset_class = \"code\"\n| alter detection_method = xdm.finding.extended_fields -> [\"detection_method\"]\n| fields detection_method\n| dedup detection_method\n| sort asc detection_method",
+                "tenants": [],
+                "schedule": null,
+                "query_editor": "xql",
+                "notification_link": "xql/xql-search/_EXECUTION_ID_",
+                "run_in_background": false,
+                "query_definition_name": "XQL-QUERY-3678483"
+              },
+              "query_source_metadata": {
+                "source": "investigation"
+              }
+            },
+            "investigationError": null,
+            "filterComponentType": "MULTI_SELECT",
+            "investigationColumn": "detection_method"
+          },
+          {
+            "name": "category",
+            "type": "DYNAMIC",
+            "title": "category",
+            "value": [],
+            "executionID": "a9be15db281f4f_7295500_inv",
+            "valueOptions": [],
+            "investigation": {
+              "ttl": "0",
+              "timeframe": {
+                "relativeTime": 86400000
+              },
+              "input_dict": {
+                "xql": "dataset = findings \n| filter xdm.finding.asset_class = \"code\"\n| fields xdm.finding.asset_category  \n| dedup xdm.finding.asset_category  \n| sort asc xdm.finding.asset_category  ",
+                "tenants": [],
+                "schedule": null,
+                "query_editor": "xql",
+                "notification_link": "xql/xql-search/_EXECUTION_ID_",
+                "run_in_background": false,
+                "query_definition_name": "XQL-QUERY-3678524"
+              },
+              "query_source_metadata": {
+                "source": "investigation"
+              }
+            },
+            "investigationError": null,
+            "filterComponentType": "MULTI_SELECT",
+            "investigationColumn": "xdm.finding.asset_category"
+          },
+          {
+            "name": "type",
+            "type": "DYNAMIC",
+            "title": "type",
+            "value": [],
+            "executionID": "48afabeaa66f4c_7295495_inv",
+            "valueOptions": [],
+            "investigation": {
+              "ttl": "0",
+              "timeframe": {
+                "relativeTime": 86400000
+              },
+              "input_dict": {
+                "xql": "dataset = findings \n| filter xdm.finding.asset_class = \"code\"\n| fields xdm.finding.asset_type \n| dedup xdm.finding.asset_type  \n| sort asc xdm.finding.asset_type  ",
+                "tenants": [],
+                "schedule": null,
+                "query_editor": "xql",
+                "notification_link": "xql/xql-search/_EXECUTION_ID_",
+                "run_in_background": false,
+                "query_definition_name": "XQL-QUERY-3678555"
+              },
+              "query_source_metadata": {
+                "source": "investigation"
+              }
+            },
+            "investigationError": null,
+            "filterComponentType": "MULTI_SELECT",
+            "investigationColumn": "xdm.finding.asset_type"
+          },
+          {
+            "name": "severity",
+            "type": "DYNAMIC",
+            "title": "severity",
+            "value": [],
+            "executionID": "ef2fcd55ccb84e_7295494_inv",
+            "valueOptions": [],
+            "investigation": {
+              "ttl": "0",
+              "timeframe": {
+                "relativeTime": 86400000
+              },
+              "input_dict": {
+                "xql": "dataset = findings \n| filter xdm.finding.asset_class = \"code\"\n// | fields xdm.finding.asset_type \n// | dedup xdm.finding.asset_type  \n// | sort asc xdm.finding.asset_type  \n| alter severity = xdm.finding.extended_fields  -> [\"issue_data\"][\"severity\"]\n| fields severity\n| dedup severity\n| sort asc severity",
+                "tenants": [],
+                "schedule": null,
+                "query_editor": "xql",
+                "notification_link": "xql/xql-search/_EXECUTION_ID_",
+                "run_in_background": false,
+                "query_definition_name": "XQL-QUERY-3678577"
+              },
+              "query_source_metadata": {
+                "source": "investigation"
+              }
+            },
+            "investigationError": null,
+            "filterComponentType": "MULTI_SELECT",
+            "investigationColumn": "severity"
+          },
+          {
+            "name": "provider",
+            "type": "DYNAMIC",
+            "title": "provider",
+            "value": [],
+            "executionID": "cac8ae68d01247_7295499_inv",
+            "valueOptions": [],
+            "investigation": {
+              "ttl": "0",
+              "timeframe": {
+                "relativeTime": 86400000
+              },
+              "input_dict": {
+                "xql": "dataset = findings \n| filter xdm.finding.asset_class = \"code\"\n| alter provider = xdm.finding.normalized_fields -> [\"xdm.code.git.provider\"]\n| fields provider\n| dedup provider\n| sort asc provider",
+                "tenants": [],
+                "schedule": null,
+                "query_editor": "xql",
+                "notification_link": "xql/xql-search/_EXECUTION_ID_",
+                "run_in_background": false,
+                "query_definition_name": "XQL-QUERY-3678592"
+              },
+              "query_source_metadata": {
+                "source": "investigation"
+              }
+            },
+            "investigationError": null,
+            "filterComponentType": "MULTI_SELECT",
+            "investigationColumn": "provider"
+          },
+          {
+            "name": "org",
+            "type": "DYNAMIC",
+            "title": "org",
+            "value": [],
+            "executionID": "3dd087ca8fc341_7295496_inv",
+            "valueOptions": [],
+            "investigation": {
+              "ttl": "0",
+              "timeframe": {
+                "relativeTime": 86400000
+              },
+              "input_dict": {
+                "xql": "dataset = findings \n| filter xdm.finding.asset_class = \"code\"\n| alter org = xdm.finding.normalized_fields -> [\"xdm.repository.organization\"]\n| fields org\n| dedup org\n| sort asc org",
+                "tenants": [],
+                "schedule": null,
+                "query_editor": "xql",
+                "notification_link": "xql/xql-search/_EXECUTION_ID_",
+                "run_in_background": false,
+                "query_definition_name": "XQL-QUERY-3678606"
+              },
+              "query_source_metadata": {
+                "source": "investigation"
+              }
+            },
+            "investigationError": null,
+            "filterComponentType": "MULTI_SELECT",
+            "investigationColumn": "org"
+          },
+          {
+            "name": "repo_name",
+            "type": "DYNAMIC",
+            "title": "repo_name",
+            "value": [],
+            "executionID": "844576e8e91b4d_7295497_inv",
+            "valueOptions": [],
+            "investigation": {
+              "ttl": "0",
+              "timeframe": {
+                "relativeTime": 86400000
+              },
+              "input_dict": {
+                "xql": "dataset = findings \n| filter xdm.finding.asset_class = \"code\" \n| alter repo_name = xdm.finding.normalized_fields -> [\"xdm.repository.name\"]\n| fields repo_name\n| dedup repo_name\n| sort asc repo_name",
+                "tenants": [],
+                "schedule": null,
+                "query_editor": "xql",
+                "notification_link": "xql/xql-search/_EXECUTION_ID_",
+                "run_in_background": false,
+                "query_definition_name": "XQL-QUERY-3678617"
+              },
+              "query_source_metadata": {
+                "source": "investigation"
+              }
+            },
+            "investigationError": null,
+            "filterComponentType": "MULTI_SELECT",
+            "investigationColumn": "repo_name"
+          },
+          {
+            "name": "collaborator",
+            "type": "DYNAMIC",
+            "title": "collaborator",
+            "value": [],
+            "valueOptions": [],
+            "investigation": {
+              "ttl": "0",
+              "timeframe": {
+                "relativeTime": 86400000
+              },
+              "input_dict": {
+                "xql": "dataset = findings \n| filter xdm.finding.asset_class = \"code\" \n| alter collaborator = xdm.finding.normalized_fields -> [\"xdm.code.git.commit.author.name\"]\n| fields collaborator\n| dedup collaborator\n| sort asc collaborator",
+                "tenants": [],
+                "schedule": null,
+                "query_editor": "xql",
+                "notification_link": "xql/xql-search/_EXECUTION_ID_",
+                "run_in_background": false,
+                "query_definition_name": "XQL-QUERY-3714868"
+              },
+              "query_source_metadata": {
+                "source": "investigation"
+              }
+            },
+            "filterComponentType": "MULTI_SELECT"
+          }
+        ]
+      }
+    }
+  ],
+  "widgets_data": [
+    {
+      "widget_key": "xql_1773878857010",
+      "title": "AppSec Findings",
+      "creation_time": 1773878857010,
+      "description": "",
+      "data": {
+        "params": [
+          {
+            "name": "detection_method",
+            "value": "*"
+          },
+          {
+            "name": "repo_name",
+            "value": "*"
+          },
+          {
+            "name": "provider",
+            "value": "*"
+          },
+          {
+            "name": "org",
+            "value": "*"
+          },
+          {
+            "name": "category",
+            "value": "*"
+          },
+          {
+            "name": "type",
+            "value": "*"
+          },
+          {
+            "name": "severity",
+            "value": "*"
+          },
+          {
+            "name": "collaborator",
+            "value": "*"
+          }
+        ],
+        "phrase": "dataset = findings \n// | filter xdm.finding.asset_class = \"code\"\n| filter xdm.finding.owner  = \"CAS\"\n| alter detection_method = xdm.finding.extended_fields -> [\"detection_method\"]\n| alter repo_name = xdm.finding.normalized_fields -> [\"xdm.repository.name\"]\n| alter repo_project = xdm.finding.normalized_fields -> [\"xdm.repository.name\"]\n| alter repo_branch = xdm.finding.normalized_fields -> [\"xdm.code.git.branch\"]\n| alter provider = xdm.finding.normalized_fields -> [\"xdm.code.git.provider\"]\n| alter org = xdm.finding.normalized_fields -> [\"xdm.repository.organization\"]\n| filter detection_method IN ($detection_method)\n| filter repo_name IN ($repo_name)\n| filter provider IN ($provider)\n| filter org IN ($org)\n| filter xdm.finding.asset_category  IN ($category)\n| filter xdm.finding.asset_type IN ($type)\n// | filter detection_method != \"CAS_LICENSE_SCANNER\"\n// | filter detection_method != \"CAS_OPERATIONAL_RISK_SCANNER\"\n// | filter detection_method != \"CAS_CI_CD_RISK_SCANNER\"\n// | filter detection_method != \"CAS_IAC_SCANNER\"\n// | filter detection_method != \"CAS_SECRET_SCANNER\"\n// | filter detection_method != \"CAS_SAST_SCANNER\"\n// | filter detection_method != \"CAS_CVE_SCANNER\"\n// | filter provider = \"\"\n// | filter org = \"\"\n// | filter repo_name = \"\"\n\n// | alter domain = xdm.finding.extended_fields  -> [\"issue_data\"][\"domain\"]\n// | alter asset_provider = xdm.finding.extended_fields  -> [\"xdm__asset_provider\"]\n\n| alter file_name = xdm.finding.normalized_fields -> [\"xdm.file.path\"]\n| alter package_manager = xdm.finding.normalized_fields -> [\"xdm.software_package.package_manager\"]\n| alter language = xdm.finding.normalized_fields -> [\"xdm.software_package.language\"]\n| alter dependency = xdm.finding.normalized_fields -> [\"xdm.software_package.dependency_type\"]\n// | alter severity = xdm.finding.normalized_fields  -> [\"xdm.vulnerability.severity\"]\n| alter severity = xdm.finding.extended_fields  -> [\"issue_data\"][\"severity\"]\n| filter severity IN ($severity)\n| alter cve = xdm.finding.normalized_fields -> [\"xdm.vulnerability.cve_id\"]\n| alter exploitable = xdm.finding.extended_fields -> [\"is_kev\"]\n// | filter exploitable  IN ($exploitable)\n| alter cve_vendor_link = xdm.finding.normalized_fields -> [\"xdm.vulnerability.cve_vendor_link\"]\n| alter package_version = xdm.finding.extended_fields -> [\"package_version\"]\n// | alter fix = xdm.finding.extended_fields -> [\"is_fixable\"]\n| alter fix_versions = xdm.finding.normalized_fields -> [\"xdm.vulnerability.fix_versions\"]\n| alter cvss_score = xdm.finding.normalized_fields -> [\"xdm.vulnerability.cvss_score\"]\n| alter epss_score = xdm.finding.normalized_fields -> [\"xdm.vulnerability.epss_score\"]\n| alter fix_versions     = json_extract_scalar_array(xdm.finding.normalized_fields, \"$.\\\"xdm.vulnerability.fix_versions\\\"\")\n| alter cve_risk_factors = json_extract_scalar_array(xdm.finding.normalized_fields, \"$.\\\"xdm.vulnerability.cve_risk_factors\\\"\")\n| alter cve_fix_date = xdm.finding.normalized_fields -> [\"xdm.vulnerability.fix_date\"]\n| alter impact = xdm.finding.normalized_fields -> [\"xdm.impact\"]\n| alter remediation = xdm.finding.extended_fields -> [\"issue_data\"][\"remediation\"]\n| alter action = xdm.finding.extended_fields -> [\"issue_data_extended\"][\"action\"]\n| alter remediation = if(remediation = null or remediation = \"\", action, remediation)\n| alter collaborator = xdm.finding.normalized_fields  -> [\"xdm.code.git.commit.author.name\"]\n| filter collaborator IN ($collaborator)\n\n| alter rule_id = xdm.finding.normalized_fields -> [\"rule_id\"]\n| alter repository_id = xdm.finding.extended_fields -> [\"repository_id\"]\n| alter prioritization_labels = xdm.finding.extended_fields  -> [\"prioritization_labels\"]\n| alter license = xdm.finding.normalized_fields -> [\"xdm.license.name\"]\n| alter report_data_source = xdm.finding.extended_fields  -> [\"report_data_source\"]\n// | alter scan_type = xdm.finding.normalized_fields  -> [\"scan_type\"]\n| alter scan_type = xdm.finding.normalized_fields  -> [\"xdm.code.scan_source\"]\n| alter documentation_link = xdm.finding.extended_fields  -> [\"documentation_link\"]\n| alter last_commit = xdm.finding.normalized_fields -> [\"xdm.code.git.commit.time\"]\n| alter last_commit = format_timestamp(\"%Y-%m-%dT%H:%M:%SZ\", to_timestamp(to_integer(last_commit), \"MILLIS\"))\n| alter code_lines = concat(\n    to_string(xdm.finding.normalized_fields -> [\"xdm.file.position.start.line\"]),\n    \",\",\n    to_string(xdm.finding.normalized_fields -> [\"xdm.file.position.end.line\"])\n)\n| fields severity, xdm.finding.owner as owner, detection_method, xdm.finding.asset_class  as class, xdm.finding.asset_category as category,  xdm.finding.asset_type as type,  scan_type, provider, org, repo_name, repo_branch, xdm.finding.asset_name as finding_asset_name, collaborator, file_name,  code_lines , xdm.finding.name as finding_name, xdm.finding.description as finding_description,  impact, remediation , rule_id, language, package_manager, dependency,  package_version,  fix_versions, cve, cve_fix_date , exploitable ,cvss_score, epss_score , cve_risk_factors , license, report_data_source, prioritization_labels , documentation_link, cve_vendor_link, last_commit, xdm.finding.last_observed  as last_observed, repository_id\n// | fields severity, xdm.finding.owner as owner, detection_method, xdm.finding.asset_class  as class, xdm.finding.asset_category as category,  xdm.finding.asset_type as type,  scan_type, provider, org, repo_name, repo_branch, xdm.finding.asset_name as finding_asset_name, collaborator, file_name,  code_lines , xdm.finding.name as finding_name, xdm.finding.description as finding_description,  impact, remediation , rule_id, language, package_manager, dependency,  package_version,  fix_versions, cve, cve_fix_date , exploitable ,cvss_score, epss_score , cve_risk_factors , license, report_data_source, prioritization_labels , documentation_link, cve_vendor_link, last_commit, xdm.finding.last_observed  as last_observed, repository_id, xdm.finding.normalized_fields , xdm.finding.extended_fields\n| sort asc org, asc repo_name, asc detection_method\n",
+        "time_frame": {
+          "relativeTime": 2592000000
+        },
+        "viewOptions": {
+          "type": "table",
+          "commands": []
+        },
+        "gridRawStorageInfo": {
+          "sort": null,
+          "coldefs": {
+            "org": "{\"pinned\":null,\"width\":366,\"hide\":false}",
+            "finding_asset_name": "{\"pinned\":null,\"width\":257,\"hide\":false}"
+          },
+          "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+          "columnWidth": "\"stretch\""
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": [
+          "findings"
+        ],
+        "query_uses_library": false
+      },
+      "creator_mail": "",
+      "is_public": true,
+      "is_predefined": false
+    }
+  ],
+  "id": "e7a81b1473ff4a1181da7456c6245d72",
+  "name": "CORTEX - [AppSec - Findings]"
+}

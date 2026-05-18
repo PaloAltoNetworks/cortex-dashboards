@@ -1,0 +1,90 @@
+id: 664aa25f-331f-47c6-850f-2843c0471e73
+version: 4
+vcShouldKeepItemLegacyProdMachine: false
+name: group_names_mapping
+starttaskid: "0"
+tasks:
+  "0":
+    id: "0"
+    taskid: 22d9d540-1ddc-40ac-8298-661eea4a2d54
+    type: start
+    task:
+      id: 22d9d540-1ddc-40ac-8298-661eea4a2d54
+      version: -1
+      name: ""
+      iscommand: false
+      brand: ""
+      playbooktaskmissingcomponent: null
+      istaskmissingcomponenterrordismissed: false
+    nexttasks:
+      '#none#':
+      - "1"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {
+        "position": {
+          "x": 450,
+          "y": 50
+        }
+      }
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+    isoversize: false
+    isautoswitchedtoquietmode: false
+  "1":
+    id: "1"
+    taskid: 3637ec4e-44e2-4fd8-93b4-718167f73bad
+    type: regular
+    task:
+      id: 3637ec4e-44e2-4fd8-93b4-718167f73bad
+      version: -1
+      name: group_names_mapping
+      scriptName: group_names_mapping
+      type: regular
+      iscommand: false
+      brand: ""
+      playbooktaskmissingcomponent: null
+      istaskmissingcomponenterrordismissed: false
+    scriptarguments:
+      cortex_api_key:
+        simple: '{TOMMED}'
+      cortex_api_key_id:
+        simple: ""
+      cortex_cloud_fqdn:
+        simple: .xdr.us.paloaltonetworks.com
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {
+        "position": {
+          "x": 450,
+          "y": 230
+        }
+      }
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+    isoversize: false
+    isautoswitchedtoquietmode: false
+view: |-
+  {
+    "linkLabelsPosition": {},
+    "paper": {
+      "dimensions": {
+        "height": 255,
+        "width": 380,
+        "x": 450,
+        "y": 50
+      }
+    }
+  }
+inputs: []
+outputs: []
+quiet: true
+adopted: true
