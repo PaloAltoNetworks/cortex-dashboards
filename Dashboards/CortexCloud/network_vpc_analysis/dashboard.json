@@ -25,7 +25,7 @@
                   },
                   {
                     "name": "action",
-                    "value": "*"
+                    "value": "ACCEPT"
                   },
                   {
                     "name": "region",
@@ -56,11 +56,15 @@
                     "value": "*"
                   },
                   {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
                     "name": "min_bytes",
                     "value": "100"
                   }
                 ],
-                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| filter region not in (null, \"\")\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp sum(total_bytes) as Total_Bytes, count() as Flows by region\n| sort desc Total_Bytes\n| limit 20\n| view graph type = pie subtype = full xaxis = region yaxis = Total_Bytes",
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| filter region not in (null, \"\")\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp sum(total_bytes) as Total_Bytes, count() as Flows by region\n| sort desc Total_Bytes\n| limit 20\n| view graph type = pie subtype = full xaxis = region yaxis = Total_Bytes",
                 "time_frame": {
                   "relativeTime": 86400000
                 },
@@ -124,7 +128,7 @@
                   },
                   {
                     "name": "action",
-                    "value": "*"
+                    "value": "ACCEPT"
                   },
                   {
                     "name": "region",
@@ -155,11 +159,15 @@
                     "value": "*"
                   },
                   {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
                     "name": "min_bytes",
                     "value": "100"
                   }
                 ],
-                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows by proto_name\n| sort desc Flows\n| view graph type = pie subtype = full xaxis = proto_name yaxis = Flows",
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows by proto_name\n| sort desc Flows\n| view graph type = pie subtype = full xaxis = proto_name yaxis = Flows",
                 "time_frame": {
                   "relativeTime": 86400000
                 },
@@ -223,7 +231,7 @@
                   },
                   {
                     "name": "action",
-                    "value": "*"
+                    "value": "ACCEPT"
                   },
                   {
                     "name": "region",
@@ -254,11 +262,15 @@
                     "value": "*"
                   },
                   {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
                     "name": "min_bytes",
                     "value": "100"
                   }
                 ],
-                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter dstaddr not in (null, \"\")\n| iploc dstaddr loc_country\n| filter loc_country not in (null, \"\")\n| filter loc_country in ($dst_country)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by loc_country\n| sort desc Flows\n| limit 20\n| view graph type = pie subtype = full xaxis = loc_country yaxis = Flows",
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter dstaddr not in (null, \"\")\n| iploc dstaddr loc_country\n| filter loc_country not in (null, \"\")\n| filter loc_country in ($dst_country)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by loc_country\n| sort desc Flows\n| limit 20\n| view graph type = pie subtype = full xaxis = loc_country yaxis = Flows",
                 "time_frame": {
                   "relativeTime": 86400000
                 },
@@ -322,7 +334,7 @@
                   },
                   {
                     "name": "action",
-                    "value": "*"
+                    "value": "ACCEPT"
                   },
                   {
                     "name": "region",
@@ -353,11 +365,15 @@
                     "value": "*"
                   },
                   {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
                     "name": "min_bytes",
                     "value": "100"
                   }
                 ],
-                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter srcaddr not in (null, \"\")\n| iploc srcaddr loc_country\n| filter loc_country not in (null, \"\")\n| filter loc_country in ($src_country)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by loc_country\n| sort desc Flows\n| limit 20\n| view graph type = pie subtype = full xaxis = loc_country yaxis = Flows",
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter srcaddr not in (null, \"\")\n| iploc srcaddr loc_country\n| filter loc_country not in (null, \"\")\n| filter loc_country in ($src_country)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by loc_country\n| sort desc Flows\n| limit 20\n| view graph type = pie subtype = full xaxis = loc_country yaxis = Flows",
                 "time_frame": {
                   "relativeTime": 86400000
                 },
@@ -403,17 +419,12 @@
                   "columnWidth": "\"stretch\""
                 }
               }
-            }
-          ]
-        },
-        {
-          "id": "row-cf4-r02",
-          "data": [
+            },
             {
-              "key": "xql_cf_v4_002",
+              "key": "xql_cf_v4_019",
               "data": {
                 "type": "Custom XQL",
-                "width": 50,
+                "width": 25,
                 "height": 400,
                 "params": [
                   {
@@ -426,7 +437,7 @@
                   },
                   {
                     "name": "action",
-                    "value": "*"
+                    "value": "ACCEPT"
                   },
                   {
                     "name": "region",
@@ -457,11 +468,123 @@
                     "value": "*"
                   },
                   {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
                     "name": "min_bytes",
                     "value": "100"
                   }
                 ],
-                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by action\n| sort desc Flows\n| view graph type = column subtype = grouped layout = horizontal xaxis = action yaxis = Flows",
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| alter account_id_str = to_string(account_id)\n| comp count() as Flows, sum(total_bytes) as Total_Bytes by account_id_str\n| sort desc Flows\n| limit 20\n| view graph type = pie subtype = full xaxis = account_id_str yaxis = Flows",
+                "time_frame": {
+                  "relativeTime": 86400000
+                },
+                "viewOptions": {
+                  "type": "pie",
+                  "commands": [
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "subtype",
+                        "value": "full"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "xaxis",
+                        "value": "account_id_str"
+                      }
+                    },
+                    {
+                      "command": {
+                        "op": "=",
+                        "name": "yaxis",
+                        "value": "Flows"
+                      }
+                    }
+                  ]
+                },
+                "drilldown_config": {
+                  "actionData": [
+                    {
+                      "param": "filter_account",
+                      "value": "$x_axis.value"
+                    }
+                  ],
+                  "actionType": "in_dashboard_drilldown"
+                },
+                "gridRawStorageInfo": {
+                  "sort": null,
+                  "coldefs": {},
+                  "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+                  "columnWidth": "\"stretch\""
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "row-cf4-r02",
+          "data": [
+            {
+              "key": "xql_cf_v4_002",
+              "data": {
+                "type": "Custom XQL",
+                "width": 50,
+                "height": 400,
+                "params": [
+                  {
+                    "name": "src_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_ip",
+                    "value": "*"
+                  },
+                  {
+                    "name": "action",
+                    "value": "ACCEPT"
+                  },
+                  {
+                    "name": "region",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dstport",
+                    "value": "*"
+                  },
+                  {
+                    "name": "protocol",
+                    "value": "*"
+                  },
+                  {
+                    "name": "dst_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "src_country",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_vpc",
+                    "value": "*"
+                  },
+                  {
+                    "name": "flag_label",
+                    "value": "*"
+                  },
+                  {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
+                    "name": "min_bytes",
+                    "value": "100"
+                  }
+                ],
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by action\n| sort desc Flows\n| view graph type = column subtype = grouped layout = horizontal xaxis = action yaxis = Flows",
                 "time_frame": {
                   "relativeTime": 86400000
                 },
@@ -532,7 +655,7 @@
                   },
                   {
                     "name": "action",
-                    "value": "*"
+                    "value": "ACCEPT"
                   },
                   {
                     "name": "region",
@@ -563,11 +686,15 @@
                     "value": "*"
                   },
                   {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
                     "name": "min_bytes",
                     "value": "100"
                   }
                 ],
-                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter vpc_id not in (null, \"\")\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by vpc_id\n| sort desc Flows\n| limit 20\n| view graph type = pie subtype = full xaxis = vpc_id yaxis = Flows",
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter vpc_id not in (null, \"\")\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by vpc_id\n| sort desc Flows\n| limit 20\n| view graph type = pie subtype = full xaxis = vpc_id yaxis = Flows",
                 "time_frame": {
                   "relativeTime": 86400000
                 },
@@ -636,7 +763,7 @@
                   },
                   {
                     "name": "action",
-                    "value": "*"
+                    "value": "ACCEPT"
                   },
                   {
                     "name": "region",
@@ -667,11 +794,15 @@
                     "value": "*"
                   },
                   {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
                     "name": "min_bytes",
                     "value": "100"
                   }
                 ],
-                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter src_ip not in (null, \"\")\n| comp sum(to_number(bytes)) as Total_Bytes, count() as Flows by src_ip\n| sort desc Total_Bytes\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = src_ip yaxis = Total_Bytes",
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter src_ip not in (null, \"\")\n| comp sum(to_number(bytes)) as Total_Bytes, count() as Flows by src_ip\n| sort desc Total_Bytes\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = src_ip yaxis = Total_Bytes",
                 "time_frame": {
                   "relativeTime": 86400000
                 },
@@ -742,7 +873,7 @@
                   },
                   {
                     "name": "action",
-                    "value": "*"
+                    "value": "ACCEPT"
                   },
                   {
                     "name": "region",
@@ -773,11 +904,15 @@
                     "value": "*"
                   },
                   {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
                     "name": "min_bytes",
                     "value": "100"
                   }
                 ],
-                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter dst_ip not in (null, \"\")\n| comp sum(to_number(bytes)) as Total_Bytes, count() as Flows by dst_ip\n| sort desc Total_Bytes\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = dst_ip yaxis = Total_Bytes",
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter dst_ip not in (null, \"\")\n| comp sum(to_number(bytes)) as Total_Bytes, count() as Flows by dst_ip\n| sort desc Total_Bytes\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = dst_ip yaxis = Total_Bytes",
                 "time_frame": {
                   "relativeTime": 86400000
                 },
@@ -853,7 +988,7 @@
                   },
                   {
                     "name": "action",
-                    "value": "*"
+                    "value": "ACCEPT"
                   },
                   {
                     "name": "region",
@@ -884,11 +1019,15 @@
                     "value": "*"
                   },
                   {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
                     "name": "min_bytes",
                     "value": "100"
                   }
                 ],
-                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| filter dstport != null\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by dstport_str, proto_name\n| sort desc Flows\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = dstport_str yaxis = Flows",
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| filter dstport != null\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by dstport_str, proto_name\n| sort desc Flows\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = dstport_str yaxis = Flows",
                 "time_frame": {
                   "relativeTime": 86400000
                 },
@@ -959,7 +1098,7 @@
                   },
                   {
                     "name": "action",
-                    "value": "*"
+                    "value": "ACCEPT"
                   },
                   {
                     "name": "region",
@@ -990,11 +1129,15 @@
                     "value": "*"
                   },
                   {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
                     "name": "min_bytes",
                     "value": "100"
                   }
                 ],
-                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter protocol = 6\n| filter action in ($action)\n| filter region in ($region)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| filter tcp_flags != null\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows by flag_label\n| sort desc Flows\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = flag_label yaxis = Flows",
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter protocol = 6\n| filter action in ($action)\n| filter region in ($region)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| filter tcp_flags != null\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows by flag_label\n| sort desc Flows\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = flag_label yaxis = Flows",
                 "time_frame": {
                   "relativeTime": 86400000
                 },
@@ -1070,7 +1213,7 @@
                   },
                   {
                     "name": "action",
-                    "value": "*"
+                    "value": "ACCEPT"
                   },
                   {
                     "name": "region",
@@ -1101,11 +1244,15 @@
                     "value": "*"
                   },
                   {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
                     "name": "min_bytes",
                     "value": "100"
                   }
                 ],
-                "phrase": "config timeframe = 7d\n| dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| alter hour_bucket = format_timestamp(\"%Y-%m-%d %H:00\", _time)\n| comp sum(total_bytes) as Total_Bytes, count() as Flows by hour_bucket\n| sort asc hour_bucket\n| view graph type = line xaxis = hour_bucket yaxis = Total_Bytes",
+                "phrase": "config timeframe = 7d\n| dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| alter hour_bucket = format_timestamp(\"%Y-%m-%d %H:00\", _time)\n| comp sum(total_bytes) as Total_Bytes, count() as Flows by hour_bucket\n| sort asc hour_bucket\n| view graph type = line xaxis = hour_bucket yaxis = Total_Bytes",
                 "timeSpan": {
                   "toTime": "now",
                   "fromTime": "7d",
@@ -1164,7 +1311,7 @@
                   },
                   {
                     "name": "action",
-                    "value": "*"
+                    "value": "ACCEPT"
                   },
                   {
                     "name": "region",
@@ -1195,11 +1342,15 @@
                     "value": "*"
                   },
                   {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
                     "name": "min_bytes",
                     "value": "100"
                   }
                 ],
-                "phrase": "config timeframe = 7d\n| dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp sum(total_bytes) as Total_Bytes, count() as Flows, values(action) as Actions by src_ip, dst_ip, srcport, proto_name\n| sort desc Total_Bytes\n| limit 20",
+                "phrase": "config timeframe = 7d\n| dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp sum(total_bytes) as Total_Bytes, count() as Flows, values(action) as Actions by src_ip, dst_ip, srcport, proto_name\n| sort desc Total_Bytes\n| limit 20",
                 "timeSpan": {
                   "toTime": "now",
                   "fromTime": "7d",
@@ -1250,7 +1401,7 @@
                   },
                   {
                     "name": "action",
-                    "value": "*"
+                    "value": "ACCEPT"
                   },
                   {
                     "name": "region",
@@ -1281,11 +1432,15 @@
                     "value": "*"
                   },
                   {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
                     "name": "min_bytes",
                     "value": "100"
                   }
                 ],
-                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action = \"REJECT\"\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as REJECTED_FLOWS, count_distinct(dstport) as UNIQUE_PORTS by src_ip\n| sort desc REJECTED_FLOWS\n| limit 25",
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action = \"REJECT\"\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as REJECTED_FLOWS, count_distinct(dstport) as UNIQUE_PORTS by src_ip\n| sort desc REJECTED_FLOWS\n| limit 25",
                 "time_frame": {
                   "relativeTime": 86400000
                 },
@@ -1326,7 +1481,7 @@
                   },
                   {
                     "name": "action",
-                    "value": "*"
+                    "value": "ACCEPT"
                   },
                   {
                     "name": "region",
@@ -1357,11 +1512,15 @@
                     "value": "*"
                   },
                   {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
                     "name": "min_bytes",
                     "value": "100"
                   }
                 ],
-                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter dstaddr incidr \"169.254.0.0/16\"\n      or pkt_dstaddr incidr \"169.254.0.0/16\"\n      or srcaddr incidr \"169.254.0.0/16\"\n      or pkt_srcaddr incidr \"169.254.0.0/16\"\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(protocol = 6, \"TCP\", protocol = 17, \"UDP\", protocol = 1, \"ICMP\", concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| fields _time, src_ip, dst_ip, srcport, dstport, proto_name, action, bytes, packets, instance_id, vpc_id, region, account_id, log_status\n| sort desc _time\n| limit 500",
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter dstaddr incidr \"169.254.0.0/16\"\n      or pkt_dstaddr incidr \"169.254.0.0/16\"\n      or srcaddr incidr \"169.254.0.0/16\"\n      or pkt_srcaddr incidr \"169.254.0.0/16\"\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(protocol = 6, \"TCP\", protocol = 17, \"UDP\", protocol = 1, \"ICMP\", concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| fields _time, src_ip, dst_ip, srcport, dstport, proto_name, action, bytes, packets, instance_id, vpc_id, region, account_id, log_status\n| sort desc _time\n| limit 500",
                 "time_frame": {
                   "relativeTime": 86400000
                 },
@@ -1407,7 +1566,7 @@
                   },
                   {
                     "name": "action",
-                    "value": "*"
+                    "value": "ACCEPT"
                   },
                   {
                     "name": "region",
@@ -1438,11 +1597,15 @@
                     "value": "*"
                   },
                   {
+                    "name": "filter_account",
+                    "value": "*"
+                  },
+                  {
                     "name": "min_bytes",
                     "value": "100"
                   }
                 ],
-                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| fields _time, src_ip, dst_ip, srcport, dstport, proto_name, action, total_bytes, packets, flag_label, instance_id, vpc_id, subnet_id, region, account_id, log_status\n| sort desc total_bytes\n| limit 500",
+                "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| fields _time, src_ip, dst_ip, srcport, dstport, proto_name, action, total_bytes, packets, flag_label, instance_id, vpc_id, subnet_id, region, account_id, log_status\n| sort desc total_bytes\n| limit 500",
                 "time_frame": {
                   "relativeTime": 86400000
                 },
@@ -1535,7 +1698,9 @@
             "name": "action",
             "type": "STATIC",
             "title": "Action",
-            "value": "",
+            "value": [
+              "ACCEPT"
+            ],
             "executionID": null,
             "valueOptions": [
               "ACCEPT",
@@ -1748,6 +1913,17 @@
             "investigationColumn": "flag_label"
           },
           {
+            "name": "filter_account",
+            "type": "STATIC",
+            "title": "Account ID",
+            "value": "*",
+            "valueOptions": [],
+            "investigation": null,
+            "investigationError": null,
+            "filterComponentType": "TEXT",
+            "investigationColumn": "account_id_str"
+          },
+          {
             "name": "min_bytes",
             "type": "STATIC",
             "title": "Min Bytes",
@@ -1786,7 +1962,7 @@
           },
           {
             "name": "action",
-            "value": "*"
+            "value": "ACCEPT"
           },
           {
             "name": "region",
@@ -1817,11 +1993,15 @@
             "value": "*"
           },
           {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
             "name": "min_bytes",
             "value": "100"
           }
         ],
-        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter srcaddr not in (null, \"\")\n| iploc srcaddr loc_country\n| filter loc_country not in (null, \"\")\n| filter loc_country in ($src_country)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by loc_country\n| sort desc Flows\n| limit 20\n| view graph type = pie subtype = full xaxis = loc_country yaxis = Flows",
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter srcaddr not in (null, \"\")\n| iploc srcaddr loc_country\n| filter loc_country not in (null, \"\")\n| filter loc_country in ($src_country)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by loc_country\n| sort desc Flows\n| limit 20\n| view graph type = pie subtype = full xaxis = loc_country yaxis = Flows",
         "time_frame": {
           "relativeTime": 86400000
         },
@@ -1895,7 +2075,7 @@
           },
           {
             "name": "action",
-            "value": "*"
+            "value": "ACCEPT"
           },
           {
             "name": "region",
@@ -1926,11 +2106,15 @@
             "value": "*"
           },
           {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
             "name": "min_bytes",
             "value": "100"
           }
         ],
-        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter dstaddr incidr \"169.254.0.0/16\"\n      or pkt_dstaddr incidr \"169.254.0.0/16\"\n      or srcaddr incidr \"169.254.0.0/16\"\n      or pkt_srcaddr incidr \"169.254.0.0/16\"\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(protocol = 6, \"TCP\", protocol = 17, \"UDP\", protocol = 1, \"ICMP\", concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| fields _time, src_ip, dst_ip, srcport, dstport, proto_name, action, bytes, packets, instance_id, vpc_id, region, account_id, log_status\n| sort desc _time\n| limit 500",
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter dstaddr incidr \"169.254.0.0/16\"\n      or pkt_dstaddr incidr \"169.254.0.0/16\"\n      or srcaddr incidr \"169.254.0.0/16\"\n      or pkt_srcaddr incidr \"169.254.0.0/16\"\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(protocol = 6, \"TCP\", protocol = 17, \"UDP\", protocol = 1, \"ICMP\", concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| fields _time, src_ip, dst_ip, srcport, dstport, proto_name, action, bytes, packets, instance_id, vpc_id, region, account_id, log_status\n| sort desc _time\n| limit 500",
         "time_frame": {
           "relativeTime": 86400000
         },
@@ -1972,7 +2156,7 @@
           },
           {
             "name": "action",
-            "value": "*"
+            "value": "ACCEPT"
           },
           {
             "name": "region",
@@ -2003,11 +2187,15 @@
             "value": "*"
           },
           {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
             "name": "min_bytes",
             "value": "100"
           }
         ],
-        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter dstaddr not in (null, \"\")\n| iploc dstaddr loc_country\n| filter loc_country not in (null, \"\")\n| filter loc_country in ($dst_country)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by loc_country\n| sort desc Flows\n| limit 20\n| view graph type = pie subtype = full xaxis = loc_country yaxis = Flows",
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter dstaddr not in (null, \"\")\n| iploc dstaddr loc_country\n| filter loc_country not in (null, \"\")\n| filter loc_country in ($dst_country)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by loc_country\n| sort desc Flows\n| limit 20\n| view graph type = pie subtype = full xaxis = loc_country yaxis = Flows",
         "time_frame": {
           "relativeTime": 86400000
         },
@@ -2081,7 +2269,7 @@
           },
           {
             "name": "action",
-            "value": "*"
+            "value": "ACCEPT"
           },
           {
             "name": "region",
@@ -2112,11 +2300,15 @@
             "value": "*"
           },
           {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
             "name": "min_bytes",
             "value": "100"
           }
         ],
-        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter src_ip not in (null, \"\")\n| comp sum(to_number(bytes)) as Total_Bytes, count() as Flows by src_ip\n| sort desc Total_Bytes\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = src_ip yaxis = Total_Bytes",
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter src_ip not in (null, \"\")\n| comp sum(to_number(bytes)) as Total_Bytes, count() as Flows by src_ip\n| sort desc Total_Bytes\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = src_ip yaxis = Total_Bytes",
         "time_frame": {
           "relativeTime": 86400000
         },
@@ -2197,7 +2389,7 @@
           },
           {
             "name": "action",
-            "value": "*"
+            "value": "ACCEPT"
           },
           {
             "name": "region",
@@ -2228,11 +2420,15 @@
             "value": "*"
           },
           {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
             "name": "min_bytes",
             "value": "100"
           }
         ],
-        "phrase": "config timeframe = 7d\n| dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp sum(total_bytes) as Total_Bytes, count() as Flows, values(action) as Actions by src_ip, dst_ip, srcport, proto_name\n| sort desc Total_Bytes\n| limit 20",
+        "phrase": "config timeframe = 7d\n| dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp sum(total_bytes) as Total_Bytes, count() as Flows, values(action) as Actions by src_ip, dst_ip, srcport, proto_name\n| sort desc Total_Bytes\n| limit 20",
         "time_frame": {
           "relativeTime": 86400000
         },
@@ -2274,7 +2470,7 @@
           },
           {
             "name": "action",
-            "value": "*"
+            "value": "ACCEPT"
           },
           {
             "name": "region",
@@ -2305,11 +2501,15 @@
             "value": "*"
           },
           {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
             "name": "min_bytes",
             "value": "100"
           }
         ],
-        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter protocol = 6\n| filter action in ($action)\n| filter region in ($region)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| filter tcp_flags != null\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows by flag_label\n| sort desc Flows\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = flag_label yaxis = Flows",
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter protocol = 6\n| filter action in ($action)\n| filter region in ($region)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| filter tcp_flags != null\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows by flag_label\n| sort desc Flows\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = flag_label yaxis = Flows",
         "time_frame": {
           "relativeTime": 86400000
         },
@@ -2381,7 +2581,7 @@
           },
           {
             "name": "action",
-            "value": "*"
+            "value": "ACCEPT"
           },
           {
             "name": "region",
@@ -2412,11 +2612,15 @@
             "value": "*"
           },
           {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
             "name": "min_bytes",
             "value": "100"
           }
         ],
-        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| filter dstport != null\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by dstport_str, proto_name\n| sort desc Flows\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = dstport_str yaxis = Flows",
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| filter dstport != null\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by dstport_str, proto_name\n| sort desc Flows\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = dstport_str yaxis = Flows",
         "time_frame": {
           "relativeTime": 86400000
         },
@@ -2497,7 +2701,7 @@
           },
           {
             "name": "action",
-            "value": "*"
+            "value": "ACCEPT"
           },
           {
             "name": "region",
@@ -2528,11 +2732,15 @@
             "value": "*"
           },
           {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
             "name": "min_bytes",
             "value": "100"
           }
         ],
-        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| filter region not in (null, \"\")\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp sum(total_bytes) as Total_Bytes, count() as Flows by region\n| sort desc Total_Bytes\n| limit 20\n| view graph type = pie subtype = full xaxis = region yaxis = Total_Bytes",
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| filter region not in (null, \"\")\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp sum(total_bytes) as Total_Bytes, count() as Flows by region\n| sort desc Total_Bytes\n| limit 20\n| view graph type = pie subtype = full xaxis = region yaxis = Total_Bytes",
         "time_frame": {
           "relativeTime": 86400000
         },
@@ -2597,7 +2805,7 @@
           },
           {
             "name": "action",
-            "value": "*"
+            "value": "ACCEPT"
           },
           {
             "name": "region",
@@ -2628,11 +2836,15 @@
             "value": "*"
           },
           {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
             "name": "min_bytes",
             "value": "100"
           }
         ],
-        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| fields _time, src_ip, dst_ip, srcport, dstport, proto_name, action, total_bytes, packets, flag_label, instance_id, vpc_id, subnet_id, region, account_id, log_status\n| sort desc total_bytes\n| limit 500",
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| fields _time, src_ip, dst_ip, srcport, dstport, proto_name, action, total_bytes, packets, flag_label, instance_id, vpc_id, subnet_id, region, account_id, log_status\n| sort desc total_bytes\n| limit 500",
         "time_frame": {
           "relativeTime": 86400000
         },
@@ -2674,7 +2886,7 @@
           },
           {
             "name": "action",
-            "value": "*"
+            "value": "ACCEPT"
           },
           {
             "name": "region",
@@ -2705,11 +2917,15 @@
             "value": "*"
           },
           {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
             "name": "min_bytes",
             "value": "100"
           }
         ],
-        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter vpc_id not in (null, \"\")\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by vpc_id\n| sort desc Flows\n| limit 20\n| view graph type = pie subtype = full xaxis = vpc_id yaxis = Flows",
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter vpc_id not in (null, \"\")\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by vpc_id\n| sort desc Flows\n| limit 20\n| view graph type = pie subtype = full xaxis = vpc_id yaxis = Flows",
         "time_frame": {
           "relativeTime": 86400000
         },
@@ -2783,7 +2999,7 @@
           },
           {
             "name": "action",
-            "value": "*"
+            "value": "ACCEPT"
           },
           {
             "name": "region",
@@ -2814,11 +3030,15 @@
             "value": "*"
           },
           {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
             "name": "min_bytes",
             "value": "100"
           }
         ],
-        "phrase": "config timeframe = 7d\n| dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| alter hour_bucket = format_timestamp(\"%Y-%m-%d %H:00\", _time)\n| comp sum(total_bytes) as Total_Bytes, count() as Flows by hour_bucket\n| sort asc hour_bucket\n| view graph type = line xaxis = hour_bucket yaxis = Total_Bytes",
+        "phrase": "config timeframe = 7d\n| dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| alter hour_bucket = format_timestamp(\"%Y-%m-%d %H:00\", _time)\n| comp sum(total_bytes) as Total_Bytes, count() as Flows by hour_bucket\n| sort asc hour_bucket\n| view graph type = line xaxis = hour_bucket yaxis = Total_Bytes",
         "time_frame": {
           "relativeTime": 604800000
         },
@@ -2876,7 +3096,7 @@
           },
           {
             "name": "action",
-            "value": "*"
+            "value": "ACCEPT"
           },
           {
             "name": "region",
@@ -2907,11 +3127,15 @@
             "value": "*"
           },
           {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
             "name": "min_bytes",
             "value": "100"
           }
         ],
-        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action = \"REJECT\"\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as REJECTED_FLOWS, count_distinct(dstport) as UNIQUE_PORTS by src_ip\n| sort desc REJECTED_FLOWS\n| limit 25",
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action = \"REJECT\"\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as REJECTED_FLOWS, count_distinct(dstport) as UNIQUE_PORTS by src_ip\n| sort desc REJECTED_FLOWS\n| limit 25",
         "time_frame": {
           "relativeTime": 86400000
         },
@@ -2962,7 +3186,7 @@
           },
           {
             "name": "action",
-            "value": "*"
+            "value": "ACCEPT"
           },
           {
             "name": "region",
@@ -2993,11 +3217,15 @@
             "value": "*"
           },
           {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
             "name": "min_bytes",
             "value": "100"
           }
         ],
-        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by action\n| sort desc Flows\n| view graph type = column subtype = grouped layout = horizontal xaxis = action yaxis = Flows",
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows, sum(to_number(bytes)) as Total_Bytes by action\n| sort desc Flows\n| view graph type = column subtype = grouped layout = horizontal xaxis = action yaxis = Flows",
         "time_frame": {
           "relativeTime": 86400000
         },
@@ -3069,7 +3297,7 @@
           },
           {
             "name": "action",
-            "value": "*"
+            "value": "ACCEPT"
           },
           {
             "name": "region",
@@ -3100,11 +3328,15 @@
             "value": "*"
           },
           {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
             "name": "min_bytes",
             "value": "100"
           }
         ],
-        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows by proto_name\n| sort desc Flows\n| view graph type = pie subtype = full xaxis = proto_name yaxis = Flows",
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| comp count() as Flows by proto_name\n| sort desc Flows\n| view graph type = pie subtype = full xaxis = proto_name yaxis = Flows",
         "time_frame": {
           "relativeTime": 86400000
         },
@@ -3169,7 +3401,7 @@
           },
           {
             "name": "action",
-            "value": "*"
+            "value": "ACCEPT"
           },
           {
             "name": "region",
@@ -3200,11 +3432,15 @@
             "value": "*"
           },
           {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
             "name": "min_bytes",
             "value": "100"
           }
         ],
-        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter dst_ip not in (null, \"\")\n| comp sum(to_number(bytes)) as Total_Bytes, count() as Flows by dst_ip\n| sort desc Total_Bytes\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = dst_ip yaxis = Total_Bytes",
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| filter dst_ip not in (null, \"\")\n| comp sum(to_number(bytes)) as Total_Bytes, count() as Flows by dst_ip\n| sort desc Total_Bytes\n| limit 20\n| view graph type = column subtype = grouped layout = horizontal xaxis = dst_ip yaxis = Total_Bytes",
         "time_frame": {
           "relativeTime": 86400000
         },
@@ -3245,6 +3481,119 @@
           "actionData": [
             {
               "param": "dst_ip",
+              "value": "$x_axis.value"
+            }
+          ],
+          "actionType": "in_dashboard_drilldown"
+        },
+        "gridRawStorageInfo": {
+          "sort": null,
+          "coldefs": {},
+          "rowHeight": "{\"rowHeight\":\"regular\",\"gridRowsHeight\":\"medium-row\"}",
+          "columnWidth": "\"stretch\""
+        }
+      },
+      "support_time_range": true,
+      "additional_info": {
+        "query_tables": [
+          "amazon_aws_raw"
+        ],
+        "query_uses_library": false
+      },
+      "creator_mail": "",
+      "is_public": false,
+      "is_predefined": false
+    },
+    {
+      "widget_key": "xql_cf_v4_019",
+      "title": "Flows by Account ID",
+      "creation_time": 1777623033246,
+      "description": "Flow count distribution across AWS Account IDs \u2014 click a slice to drill down by account",
+      "data": {
+        "params": [
+          {
+            "name": "src_ip",
+            "value": "*"
+          },
+          {
+            "name": "dst_ip",
+            "value": "*"
+          },
+          {
+            "name": "action",
+            "value": "ACCEPT"
+          },
+          {
+            "name": "region",
+            "value": "*"
+          },
+          {
+            "name": "dstport",
+            "value": "*"
+          },
+          {
+            "name": "protocol",
+            "value": "*"
+          },
+          {
+            "name": "dst_country",
+            "value": "*"
+          },
+          {
+            "name": "src_country",
+            "value": "*"
+          },
+          {
+            "name": "filter_vpc",
+            "value": "*"
+          },
+          {
+            "name": "flag_label",
+            "value": "*"
+          },
+          {
+            "name": "filter_account",
+            "value": "*"
+          },
+          {
+            "name": "min_bytes",
+            "value": "100"
+          }
+        ],
+        "phrase": "dataset = amazon_aws_raw\n| filter (_log_type = \"Cloud Flow Log\")\n| filter action in ($action)\n| filter region in ($region)\n| alter proto_name = if(\n    protocol = 6,   \"TCP\",\n    protocol = 17,  \"UDP\",\n    protocol = 1,   \"ICMP\",\n    protocol = 41,  \"IPv6-Encap\",\n    protocol = 47,  \"GRE\",\n    protocol = 4,   \"IP-in-IP\",\n    protocol = 132, \"SCTP\",\n    protocol = 8,   \"EGP\",\n    protocol = 50,  \"ESP\",\n    protocol = 51,  \"AH\",\n    protocol = 89,  \"OSPF\",\n    protocol = 112, \"VRRP\",\n    protocol = 58,  \"ICMPv6\",\n    concat(\"Proto-\", to_string(protocol)))\n| filter proto_name in ($protocol)\n| alter src_ip = coalesce(pkt_srcaddr, srcaddr)\n| alter dst_ip = coalesce(pkt_dstaddr, dstaddr)\n| filter src_ip in ($src_ip)\n| filter dst_ip in ($dst_ip)\n| alter dstport_str = to_string(dstport)\n| filter dstport_str in ($dstport)\n| filter vpc_id in ($filter_vpc)\n| alter _fa = to_string($filter_account)\n| filter to_string(account_id) contains _fa or _fa = \"*\"\n| alter flag_label = if(\n    tcp_flags = 0,  \"No Flags\",\n    tcp_flags = 1,  \"FIN\",\n    tcp_flags = 2,  \"SYN\",\n    tcp_flags = 3,  \"FIN+SYN\",\n    tcp_flags = 4,  \"RST\",\n    tcp_flags = 5,  \"FIN+RST\",\n    tcp_flags = 6,  \"SYN+RST\",\n    tcp_flags = 7,  \"FIN+SYN+RST\",\n    tcp_flags = 16, \"ACK\",\n    tcp_flags = 17, \"FIN+ACK\",\n    tcp_flags = 18, \"SYN+ACK\",\n    tcp_flags = 19, \"FIN+SYN+ACK\",\n    tcp_flags = 20, \"RST+ACK\",\n    tcp_flags = 22, \"SYN+RST+ACK\",\n    tcp_flags = 23, \"FIN+SYN+RST+ACK\",\n    tcp_flags = 24, \"PSH+ACK\",\n    tcp_flags = 25, \"FIN+PSH+ACK\",\n    tcp_flags = 26, \"SYN+PSH+ACK\",\n    tcp_flags = 27, \"FIN+SYN+PSH+ACK\",\n    tcp_flags = 28, \"RST+PSH+ACK\",\n    to_string(tcp_flags))\n| filter flag_label in ($flag_label)\n| alter total_bytes = to_number(bytes)\n| filter total_bytes >= to_number($min_bytes)\n| alter account_id_str = to_string(account_id)\n| comp count() as Flows, sum(total_bytes) as Total_Bytes by account_id_str\n| sort desc Flows\n| limit 20\n| view graph type = pie subtype = full xaxis = account_id_str yaxis = Flows",
+        "time_frame": {
+          "relativeTime": 86400000
+        },
+        "viewOptions": {
+          "type": "pie",
+          "commands": [
+            {
+              "command": {
+                "op": "=",
+                "name": "subtype",
+                "value": "full"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "xaxis",
+                "value": "account_id_str"
+              }
+            },
+            {
+              "command": {
+                "op": "=",
+                "name": "yaxis",
+                "value": "Flows"
+              }
+            }
+          ]
+        },
+        "drilldown_config": {
+          "actionData": [
+            {
+              "param": "filter_account",
               "value": "$x_axis.value"
             }
           ],

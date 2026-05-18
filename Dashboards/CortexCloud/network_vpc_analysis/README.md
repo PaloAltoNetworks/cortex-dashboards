@@ -43,6 +43,7 @@ Use the filters and drilldowns to investigate you network flows and create Corre
 - Destination Country
 - Source Country
 - VPC
+- Account
 - TCP Flag
 - Min Transfer (Bytes) (default - 100)
 
